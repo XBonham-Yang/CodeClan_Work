@@ -2,5 +2,279 @@
 title: "R Notebook"
 output: html_notebook
 ---
+*load all the library that you need first
+```{r}
+library(tidyverse)
+library(CodeClanData)
+```
 
+```{r}
+students
+```
+
+```{r}
+all_deaths
+```
+exploring your data first 
+nrow()/ncol() = dim() number of col and row
+```{r}
+nrow(all_deaths)
+```
+
+```{r}
+ncol(all_deaths)
+```
+
+```{r}
+dim(all_deaths)
+```
+```{r}
+names(all_deaths)
+```
+tail() is the same
+```{r}
+head(all_deaths)
+```
+glimpse() see everthing at once
+```{r}
+glimpse(all_deaths)
+```
+sum is more numerical summary and glimps are like a smaller version 
+```{r}
+summary(all_deaths)
+```
+str() simliar to glimpse 
+```{r}
+str(all_deaths)
+```
+*this pops out and like excels. and can do a bit like search or filte/ graph 
+```{r}
+view(all_deaths)
+```
+once logged in environment can click and sort of view it as view() ish. 
+codeclan data use small drop box then it will be in the environment.
+
+
+select()this one pick up coloums and just add the names after ,  no " needed 
+```{r}
+select(all_deaths, name, allegiances,gender,nobility, year_of_death)
+```
+use - in front of the coloum if you don't want it, kind of used the names like number here
+```{r}
+deaths_no_name <- select(all_deaths, -name)
+```
+
+```{r}
+deaths_no_name
+```
+```{r}
+names(all_deaths)
+```
+
+*select(data, contains("words you are looking"))
+fucs as above starts_with(), ends_withs(), ect check the Help page
+*number as index also works and range eg. 1:4 ; names of col also can 
+work as range eg; name:book_of_death  name of col also work with - 
+eg. -col1 : -col2 this will also work combines with c(), eg. -c(col1:col2)
+* can put mutilple contains() inside seprate with , 
+
+```{r}
+bk <- select(all_deaths,4,5,6,9,10,11,12,13)
+dth <- select(all_deaths,3,4,5)
+
+bk
+dth
+```
+trial 
+```{r}
+book <- select(all_deaths,book_of_death, death_chapter, book_intro_chapter, book1_GoT, book2_CoK,
+               book3_SoS, book4_FfC, book5_DwD)
+death <- select(all_deaths, book_of_death, year_of_death, death_chapter)
+```
+
+*random ones 
+= can also use like <- but mostly inside func
+%in%  check if the left is contained in right
+
+*filters does rows select the name of the col still not " 
+but what's inside needs " 
+```{r}
+filter(all_deaths,allegiances == "Lannister")
+```
+```{r}
+filter(all_deaths, allegiances %in% c("Lannister", "House Lannister"))
+```
+```{r}
+filter(all_deaths, year_of_death > 299)
+```
+
+```{r}
+filter(all_deaths, allegiances == "None")
+```
+
+& 
+| 
+```{r}
+filter(all_deaths, allegiances == "Lannister" & nobility == 1)
+```
+for this one above it's the same as , 
+
+alle == "L" | "S" DOEN'T WORK
+but 
+alle == "L" , "s" works 
+alle %in% c("list") works 
+
+```{r}
+filter(all_deaths, allegiances == "Lannister" | "House Stark")
+```
+
+
+```{r}
+filter(all_deaths, book_intro_chapter== 5)
+```
+
+*filter(data, between(col, 5,10)) 5:10
+*filter(all_deaths, str_detect(allegiances,"Lannister"))
+
+```{r}
+filter(all_deaths, str_detect(allegiances,"Lannister"))
+```
+
+task to do 
+
+```{r}
+y299 <- filter(all_deaths,year_of_death <= 299)
+fem <-filter(all_deaths, gender == 0 & allegiances != "Lannister")
+jds <- filter (all_deaths, name %in% c("Jon Snow","Daenerys Targaryen","Samwell Tarly"))
+
+y299
+fem
+jds
+```
+
+
+arrange data putting things in order small to large
+```{r}
+arrange(all_deaths, book_intro_chapter)
+```
+
+this is desc order big to small
+```{r}
+arrange(all_deaths, desc(book_intro_chapter))
+```
+
+this arrange first thing than second thing 
+```{r}
+arrange(all_deaths, book_of_death,death_chapter)
+```
+
+```{r}
+allorder <- arrange(all_deaths, allegiances)
+all_and_book <-arrange(all_deaths, allegiances, book_intro_chapter)
+descdeath <- arrange(all_deaths, desc(year_of_death))
+allorder
+all_and_book
+descdeath
+```
+
+
+*mutate, a place to use = to assign <-doesn't work here
+*it goes to the end and creat a new col
+*.after = will place the new col after the assigned col
+there's a dot in front 
+*if you didn't put the name it will call the col by the oppration
+
+```{r}
+mutate(all_deaths, years_survived = year_of_death - 298, 
+       .after = year_of_death)
+```
+
+```{r}
+mutate(all_deaths, book_of_death * 5)
+```
+editting things 
+*is.na() check if something is NA, this changed the datetype to logical
+
+```{r}
+mutate(all_deaths,
+       year_of_death = is.na(year_of_death))
+```
+*as.logical() put things to logical
+this col only had 1 and 0 so it worked 
+```{r}
+mutate(all_deaths, nobility = as.logical(nobility))
+```
+*as.numeric()
+*this didn't work as name can't be changed to numbers this returned as NA
+
+```{r}
+mutate(all_deaths, name = as.numeric(name))
+```
+*if there is missing data, the mean()doesn't work 
+*use na.rm = TRUE inside the mean() to remove the NA
+
+```{r}
+mutate(all_deaths,
+       avg_death = mean(year_of_death, na.rm = TRUE))
+```
+summarise
+this create a new var with a single value of that var 
+the following give you two things 
+```{r}
+summarise(all_deaths,
+          avg_death = mean(year_of_death, na.rm = TRUE),
+          sum_males = sum(gender))
+```
+group_by
+this shows a small box above says how many groups are there.
+```{r}
+death_grouped <- group_by(all_deaths, allegiances)
+```
+n()counts the rows
+a small table shows how many are in the group 
+```{r}
+summarise(death_grouped,
+          charater_count = n())
+```
+
+```{r}
+death_grouped <- group_by(all_deaths, nobility, gender)
+death_grouped
+```
+```{r}
+summarise(death_grouped, char_coount = n())
+```
+%>%
+keysc shift + CMD + M
+
+!is.na() works
+
+the following is an example 
+```{r}
+have_died <- filter(all_deaths, !is.na(book_of_death)) 
+
+died_grouped <- group_by(have_died, allegiances)
+died_counts <- summarise(died_grouped, count = n())
+
+arrange(died_counts, desc(count))
+```
+using pipe %>% 
+starts with data
+then filter() don't need to write the data name inside 
+the following is the same as the above but shorter
+can run line by line to check 
+```{r}
+all_deaths %>% 
+  filter(!is.na(book_of_death)) %>% 
+  group_by(allegiances) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+```
+
+
+```{r}
+?pull
+```
+pull is like return 
+pull to read
 
