@@ -1,0 +1,74 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+opt cmd I
+
+
+
+```{r}
+library(tidyverse)
+
+```
+
+```{r}
+dog_bites <- read_csv("data/dog_bites.csv")
+```
+
+
+```{r}
+dog_bites
+```
+```{r}
+seedmix <- read_excel("data/edinburgh_seedmix.xlsx")
+```
+```{r}
+seedmix
+```
+```{r}
+seedmix_north <- read_excel("data/edinburgh_seedmix.xlsx",
+                            sheet = 3)
+```
+for the sheet section, you can also do sheet = "North neighbourhood" if you know the name of the sheet
+
+```{r}
+seedmix_north
+```
+```{r}
+excel_sheets("data/edinburgh_seedmix.xlsx")
+```
+checks the names of the sheets 
+
+```{r}
+seedmix_sp <- read_excel("data/edinburgh_seedmix.xlsx",4)
+seedmix_sn <- read_excel("data/edinburgh_seedmix.xlsx","South Neighbourhood")
+```
+
+```{r}
+library(CodeClanData)
+```
+```{r}
+students
+```
+*write_csv to create a csv file, can use "data/file name you picked .csv" to put it under the data folder
+*can't put in a folder that doesn't exit or create a new folder.
+*select the part of the code and press run to run parts of the codes.
+
+```{r}
+write_csv(students, "students.csv")
+write_csv(students, "data/students2.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
