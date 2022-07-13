@@ -2,4 +2,172 @@
 title: "R Notebook"
 output: html_notebook
 ---
+missing value 
+`missing is not the same as NULL 
+`methods to deal with 
+`why missing and pattern 
+`deal with 
 
+`is.na()
+drop.na()
+coalesce()
+na_if ()
+....
+ 
+###
+```{r}
+comms_data
+```
+| | +2 = 2 excl
+na + 2 = NA 
+mean (c(2,3,NA)) is NA
+c("edinburgh', "london", "unknow" )
+c("edinburgh', "london", "NA" or "n/a )
+c(2,3,-2)
+
+
+
+NA - encode missing 
+NaN -not an number 
+Inf
+-Inf
+'UNKNOWN'- 
+NULL - complelet lack of value 
+
+
+
+drop_na() will get ride of too much data 
+```{r}
+comms_data %>% 
+  drop_na()
+```
+
+#imputation 
+replace the NA with something sensible, mean/median 
+```{r}
+comms_data %>% 
+  pull (monthly_charges) %>% 
+  mean(na.rm = TRUE)
+```
+
+```{r}
+comms_data %>% 
+  pull (monthly_charges) %>% 
+  median(na.rm = TRUE)
+```
+```{r}
+comms_data %>% 
+  pull (monthly_charges) %>% 
+  range(na.rm = TRUE)
+```
+
+```{r}
+min_charge <- comms_data %>% 
+  pull (monthly_charges) %>% 
+  min(na.rm = TRUE)
+
+max_charge <- comms_data %>% 
+  pull (monthly_charges) %>% 
+  max(na.rm = TRUE)
+```
+
+```{r}
+max_charge - min_charge
+```
+
+```{r}
+summary(comms_data)
+```
+
+## leave them along?
+is.na()
+NaN is NA 
+NULL is not 
+Inf is not 
+```{r}
+is.na(Inf)
+```
+
+```{r}
+comms_data
+```
+
+## standard missing value = NA 
+
+```{r}
+comms_data %>% 
+  filter(is.na(monthly_charges))
+
+
+comms_data %>% pull(monthly_charges) %>%  is.na() %>% 
+  sum()
+
+
+comms_data %>% pull(monthly_charges) %>%  is.na() %>% 
+  mean()
+
+
+comms_data %>% 
+  summarise(count = sum(is.na(monthly_charges)))
+
+
+```
+
+
+coalesce(thing to fix, thing to fix with )
+
+```{r}
+comms_data_imputed_value <- comms_data %>%
+  mutate(monthly_charges2 = coalesce(monthly_charges, median(monthly_charges, na.rm = TRUE)), 
+  monthly_charges3 = coalesce(monthly_charges, mean(monthly_charges, na.rm = TRUE)),
+  .after = monthly_charges)
+```
+
+
+
+```{r}
+ggplot(comms_data_imputed_value, aes(customerID, monthly_charges2))+
+  geom_point()
+ggplot(comms_data_imputed_value, aes(customerID, monthly_charges3))+
+  geom_point()
+```
+```{r}
+pay_col <- comms_data %>% 
+  select(payment_method)
+pay_col %>% group_by() %>%
+  summarise(sum(is.na(payment_method)))
+
+```
+
+na_if(col, "list") coalesce()
+
+```{r}
+comms_data %>%
+  filter(is.na(total_charges))
+
+comms_data_imputed_value %>% 
+  select(total_charges) %>% 
+  mutate(total_charges_ex_na = na_if(total_charges,"na"),
+         total_charges_ex_na2 = na_if(total_charges,"N/A"))
+```
+inside na_if() that list of NA goes in "" 
+
+
+this is what the above code would look like in real life 
+do not need to select it and just overwrite it. 
+
+
+comms_data_imputed_value %>% 
+  mutate(total_charges = na_if(total_charges,"na"),
+         total_charges = na_if(total_charges,"N/A"))
+
+this line below can be just add in
+```{r}
+comms_data_cleaned <- comms_data %>% 
+  mutate(payment_method = na_if (payment_method, "--")) %>% 
+  coalesce(payment_method, "unknow")
+
+```
+
+coalesce <---> na_if 
+they are the pair 

@@ -1,5 +1,65 @@
 ---
-title: "R Notebook"
+title: "Cleaning DataNB"
 output: html_notebook
 ---
+
+CONCEPT OF DATA CLEANING
+issues 
+deal with issues
+
+#loading packages 
+```{r}
+library(tidyverse)
+library(janitor)
+library(CodeClanData)
+```
+
+`janitor:: clean_names()`
+`rename()`
+
+csv - comma separated values
+first 4 lines are meta- data , data about data
+
+```{r}
+video_games <- read_csv("data/steam-200k-sample.csv", skip = 4)
+video_games
+```
+
+```{r}
+video_games <- read_csv("data/steam-200k-sample.csv", 
+                        skip = 4,
+                        col_types = cols('bought online' = col_logical()))
+video_games
+```
+
+can also do this, it's the same 
+###
+read_csv("data/steam-200k-sample.csv", skip = 4) %>%
+  mutate(`bought online` = as.logical(`bought online`))
+### 
+notice above that ` not ' for col names if there's 
+space have to use ` 
+
+
+below used the clean_names() to remove the space and 
+replaced with _ 
+reason as above 
+```{r}
+vg_janitor_clean <- video_games %>% 
+  clean_names()
+```
+for rename() lH <- Rh
+rename will follow what we want 
+new name = old name 
+```{r}
+vg_janitor_clean %>% 
+  rename(`game_title` = `game_name`,
+         `activity` = `what`,
+         `playing_hours` = `value`)
+```
+
+
+
+
+
 
