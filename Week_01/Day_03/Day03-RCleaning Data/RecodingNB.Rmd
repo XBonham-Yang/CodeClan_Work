@@ -2,18 +2,220 @@
 title: "R Notebook"
 output: html_notebook
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+recoding
 
 ```{r}
-plot(cars)
+CodeClanData:: students_big
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+if_else()
+recode
+case_when
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+###if_else()
+if something is true 
+do this 
+else
+do this 
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(older_than_12 = ageyears > 12)
+
+
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(older_than_12 = if_else(ageyears >12, 
+                                 "Older than 12","12 or younger"))
+```
+if_else(test, _value_ if True, _value_ if False)
+
+
+```{r}
+students_big %>% 
+  select(gender) %>% 
+  mutate(gender_recode = if_else(gender == "M", "Male","Female"))
+```
+
+```{r}
+students_big %>% 
+  select(handed) %>% 
+  mutate(handed = if_else(handed == "R", "Right","Left"))
+```
+
+this one when else stayed as same to do is to just put 
+favourite-physical-activity in 
+you can't miss else here 
+
+```{r}
+students_big %>% 
+  select((favourite_physical_activity)) %>% 
+  mutate(favourite_physical_activity = if_else(favourite_physical_activity == "Football/Soccer", "Football",favourite_physical_activity))
+```
+
+recode()
+recode(col, 'old name' = 'new name', 'old name' = 'new name')
+```{r}
+students_big %>% 
+  select(travel_to_school) %>% 
+  mutate(travel_to_school_recode = recode(travel_to_school, 
+                                          'Bus'= 'bus',
+                                          'Car'= 'car',
+                                          'Walk'='walk'))
+```
+
+this count() put things in groups and count how mnany 
+can also but a default as below 
+
+
+```{r}
+students_big %>% 
+  count(travel_to_school)
+
+students_big %>% 
+  select(travel_to_school) %>% 
+  mutate(travel_to_school_recode = recode(travel_to_school, 
+                                          'Bus'= 'bus',
+                                          'Car'= 'car',
+                                          'Walk'='walk',
+                                          .default = "other"))
+```
+
+example of nummbers
+old name has to have "" and the new thing is number 
+"12" = 120 
+
+```{r}
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(ageyears_recoded = recode(ageyears, "12" = 120, 
+                           .default = 0))
+```
+
+
+```{r}
+data <- read.table(header = TRUE, text="
+ subject sex control cond1 cond2 compl
+       1   M     7.9  12.3  10.7  T
+       2   F     6.3  10.6  11.1  T
+       3   F     9.5  13.1  13.8  N
+       4   M    11.5  13.4  12.9  F
+")
+data
+```
+
+```{r}
+data %>% 
+  mutate(subject = recode(subject,"1"= "001",
+                         "2"= "002",
+                         "3"="003",
+                         "4"="004")) %>% 
+  mutate(sex = recode(sex,"F"= "Female",
+                     "M"="Male")) %>% 
+  mutate(compl = recode(compl,"T"="True",
+                      "F"= "False",
+                    .default = "NA" ))
+```
+NA_character_ put NA to character and will be NA when run
+```{r}
+data %>% 
+  mutate(compl = recode(compl,"T"="True",
+                      "F"= "False",
+                    .default = NA_character_ ))
+```
+recode() things goes in the col has to be same type.
+```{r}
+
+  mutate(compl = recode(compl,"T"= TRUE,
+                      "F"= FALSE,
+                    .default = NA ))
+```
+
+case_when() doesn't have to be df 
+
+so this thing when it runs to the second condition
+it doesn't rewrite the first one
+
+so it's like if, elif and else 
+```{r}
+x <- 1:10
+
+case_when(x <= 5 ~ "A",
+          x<= 7 ~ "B",
+          TRUE ~ "C")
+```
+
+```{r}
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(
+    age_divisible = case_when(
+      ageyears %% 2 == 0 ~ "Even",
+      ageyears %% 3 == 0 ~ "Divisible by 3",
+      ageyears %% 5 == 0 ~ "Divisible by 5",
+      TRUE               ~ "Other number"
+    )
+  )
+```
+ageyears is num so need to be same type 
+NA_types 
+
+```{r}
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(
+    ageyears = case_when(
+      ageyears %% 2 == 0 ~ "Even",
+      ageyears %% 3 == 0 ~ "Divisible by 3",
+      ageyears %% 5 == 0 ~ "Divisible by 5",
+      TRUE               ~ as.character(ageyears)
+    )
+  )
+```
+
+
+
+
+extra tricks
+
+```{r}
+new_coders
+```
+#using group_by() with mutate()
+
+```{r}
+new_coders %>% 
+  group_by(reasons_to_code) %>% 
+  summarize(avg_exp_earn = mean(expected_earn))
+
+new_coders %>% 
+  group_by(job_pref) %>% 
+  mutate(avg_exp_earn = mean(expected_earn))
+```
+
+
+windows
+lag and lead()
+```{r}
+chinesemeal %>% 
+  mutate(last_year_cals = lag(CaloriesPerDay)) #but firt year into second year
+
+chinesemeal %>% 
+  mutate(last_year_cals = lead(CaloriesPerDay)) #push one forward 
+
+chinesemeal %>% 
+  mutate(diff_cals = lead(CaloriesPerDay) - CaloriesPerDay)
+```
+
+rolling means to check on notes 
+across()
+```{r}
+all_deaths %>% 
+  mutate(book1_GoT = as.logical(book1_GoT),
+         book2_CoK = as.logical(book2_CoK))
+
+all_deaths %>% 
+  mutate(across(book1_GoT:book5_DwD, as.logical))
+```
 
