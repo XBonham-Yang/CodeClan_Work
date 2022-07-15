@@ -123,10 +123,18 @@ Clean the variable names and drop missing ratings from `scent_ratings` and calcu
 library(tidyr)
 scent_ratings %>% 
   janitor::clean_names() %>% 
-  drop_na(rating) %>% 
+  filter(rating != NA_integer_) %>% 
   group_by(scent) %>% 
   summarise(mean_rating = mean(rating))
 ```
 
 question NA_INT
+
+```{r}
+scent_ratings %>% 
+  janitor::clean_names() %>% 
+  filter(!is.na(rating)) %>% 
+  group_by(scent) %>% 
+  summarise(mean_rating = mean(rating))
+```
 

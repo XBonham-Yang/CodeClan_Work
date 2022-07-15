@@ -1,0 +1,29 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(CodeClanData)
+```
+
+```{r}
+students <- students
+students %>% 
+  select(languages_spoken,superpower,age_years) %>% 
+  group_by(superpower,languages_spoken) %>% 
+  summarise(two_groups = mean(age_years))
+
+students %>% 
+  select(languages_spoken,superpower,age_years) %>% 
+  group_by(superpower) %>% 
+  summarise(one_group = mean(age_years))
+
+students %>% 
+  select(languages_spoken,superpower,age_years) %>% 
+  group_by(superpower,languages_spoken) %>% 
+  summarise(dropped = mean(age_years), .groups = 'drop')
+
+
+```
+
