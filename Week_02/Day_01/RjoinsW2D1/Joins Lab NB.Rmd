@@ -1,0 +1,110 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+1 MVP
+1.1 Data Investigation
+
+Question 1.
+Read the files “actors.csv”, “movies.csv” and “roles.csv” into R. You might get warnings here - don’t worry the data is okay for what we are trying to do.
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+actors <- read_csv("data/actors.csv")
+movies <- read_csv("data/movies.csv")
+roles <- read_csv("data/roles.csv")
+```
+
+
+Question 2.
+
+What are the primary keys and the foreign keys for each data frame?
+
+#actor :primary (ID),       froeign key()
+#movies:primary (ID),       froeign key()
+#role:  primary (),         froeign(Movie_ID, Actor_ID)
+
+What kind of relationship (one-to-one, one-to-many, many-to-many) is there between
+actors and roles _one to many_
+movies and roles _one to many_
+actors and movies _many to many_
+
+
+
+1.2 Little Mermaid, The
+Question 1.
+From the movies table, find the id of the film The Little Mermaid. (In the data as “Little Mermaid, The”).
+```{r}
+movies %>% filter(name == "Little Mermaid, The")
+```
+
+
+
+Question 2.
+Filter the roles data frame, so we just have roles from the Little Mermaid (hint: use the ID you found in the last question). Save the result as little_mermaid_roles.
+
+```{r}
+little_mermaid_roles <- roles %>% filter(movie_id == 192017)
+little_mermaid_roles
+```
+
+
+
+Question 3.
+Carry out a left join on this new data frame and the actors data frame, to find the actors which appeared in The Little Mermaid.
+
+```{r}
+left_join(little_mermaid_roles, actors, by = c("actor_id" = "id"))
+```
+
+
+Question 4.
+Do the last join, but with an inner join instead. Is the data different? Why is that?
+```{r}
+inner_join(little_mermaid_roles, actors, by = c("actor_id" = "id"))
+```
+
+
+
+1.3 Actors
+Question 1.
+For all actors who have appeared in at least two films. Call this data frame actors_more_than_once.
+```{r}
+actors_more_than_once <- roles %>% 
+  count(actor_id) %>% 
+  filter(n >= 2)
+actors_more_than_once
+```
+
+
+
+Question 2.
+Left join actors_more_than_once to roles, so we can see all the actors roles those actors played in.
+```{r}
+act_rol <- left_join(actors_more_than_once, roles, by = "actor_id") 
+act_rol 
+```
+
+
+
+Question 3.
+Left join the result from above to movies, so we can see details of each movie for these roles
+```{r}
+all_joined <- left_join(act_rol, movies, by = c("movie_id" = "id"))
+
+all_joined 
+```
+
+Question 4.
+For each actor, find the average rating of the films they appeared. Find the five actors with the highest average rank of films they appeared in.
+```{r}
+
+  
+```
+
+1.4 The Busiest Actor
+Question 1.
+Find the actor who has appeared in most films. List the films they appeared in, the year the film was released and their role in the film.

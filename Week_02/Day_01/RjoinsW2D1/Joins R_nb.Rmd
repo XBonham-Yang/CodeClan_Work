@@ -65,3 +65,65 @@ right_join(customers, orders, "customer_ID")
 full_join(customers, orders, "customer_ID")
 ```
 
+
+```{r}
+cust
+```
+have different names, 
+in the c(),the order of the two nams hae to match the df 
+```{r}
+customers_adj <- rename(customers, ID = customer_ID)
+inner_join(customers_adj, orders, by = c("ID" = "customer_ID"))
+```
+
+semi_join(customers, orders, )
+
+```{r}
+customers2 <- customers %>% 
+  mutate(payment_type = c("card","cash","cash","card","card","card"))
+
+order2 <- orders %>% 
+  mutate(payment_type = c("card","cash","cash","card","card","card"))
+
+inner_join(customers2, order2, by = c("customer_ID", "payment_type"))
+```
+
+filtering join not really join 
+semi will keep the tings that are match 
+anti will keep the things that aren't 
+```{r}
+semi_join(customers, orders, "customer_ID")
+```
+
+```{r}
+anti_join(customers, orders, "customer_ID")
+```
+```{r}
+statuses <- tibble(
+  status = c("active", "active", "inactive", "inactive", "active", "inactive")
+) 
+```
+
+bind_cols()
+just kind of add on to the table one 
+```{r}
+bind_cols(customers, statuses)
+```
+bind_rows()
+```{r}
+past_customers <- tibble(
+  customer_ID = c(020, 021), 
+  name = c("Dave Brown", "Jess Bishop"),
+  email_address = c("dbrown@hotmail.com", "jessb@gmail.com"),
+  shipping_address = c("57 Park View, Leith", "12 Reid Way, Broxburn")
+)
+
+past_customers
+```
+
+```{r}
+bind_rows(customers, past_customers)
+```
+rbind doesn't work if the names doesn't match or more variables 
+
+

@@ -1,0 +1,104 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+pivot_longer(): gathers columns into rows
+pivot_wider(): spreads rows into columns
+separate() : separates one column into two
+unite() : unites several columns into one
+
+```{r}
+library(tidyr)
+library(tidyverse)
+```
+
+```{r}
+subject_hr <- tibble( name = c("SUBJ01","SUBJ02","SUBJ03"), 
+  hr_am = c(68,72,68), 
+  hr_pm = c(58,89,52))
+
+subject_hr
+```
+```{r}
+subject_hr %>% 
+  pivot_longer(cols = c("hr_am", "hr_pm"),
+               names_to = "measurements_of_time",
+               values_to = "heartrate")
+```
+
+col = starts_with("hr")
+can use select helpers 
+```{r}
+income <- tibble(religion = c("Agnostic","Atheist","Buddhist", "Catholic"), 
+  X10k = c(12,25,3,75), 
+  X10k_to_20k = c(34,14,6,60),
+  X20k_to_30k = c(45,22,10,110))
+
+income
+```
+
+```{r}
+income %>% 
+  pivot_longer(cols = c("X10k", "X10k_to_20k", "X20k_to_30k"),
+               names_to = "salary",
+               values_to = "amount")
+  
+```
+```{r}
+messy_orders <- tibble( name = c("Joe Bloggs","Jane Smith","Penny Jones"), 
+  order_info = c("XY7282/29-06-19","LO0182/15-03-19","AS6812/04-06-19"), 
+  order_amount = c(58.00,125.00,75.25))
+
+messy_orders
+```
+
+```{r}
+tidy_orders <- messy_orders %>% 
+  separate(order_info, c("order_number","date"), sep ="/")
+
+tidy_orders
+```
+```{r}
+library(CodeClanData)
+```
+
+```{r}
+hospital_visits
+```
+```{r}
+hospital_visits_long <- hospital_visits %>%
+  pivot_longer(cols = starts_with("FY"), 
+               names_to = "year", 
+               values_to = "visit_numbers",
+               names_prefix = "FY")
+```
+
+```{r}
+hospital_visits_wide <- hospital_visits_long %>%
+  pivot_wider(names_from = Field, 
+              values_from = visit_numbers)
+hospital_visits_wide
+```
+
+```{r}
+hospital_visits_coded <- hospital_visits_wide %>%
+  separate(IcdChapter, c("code", "description"), sep = "\\." )
+
+hospital_visits_coded
+```
+_\\ allows us to do . inside the "" as other wise can't do "."_
+
+
+so for the name from and to, if that's a new name than need to 
+use "" but if the name was old don't need to use ""
+
+
+
+if you want to put it back again then: 
+```{r}
+hospital_visits_unite <- hospital_visits_coded %>%
+  unite(disease, c("code", "description"), sep =":")
+
+head(hospital_visits_unite)
+```
+
