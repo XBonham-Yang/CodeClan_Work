@@ -1,0 +1,67 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+keys 
+Primary Ket: Unique identifier 
+Foreign Key: Find in other table that connects 
+```{r}
+library(tidyverse)
+```
+
+```{r}
+customers <- tibble(
+  customer_ID = c(001, 002, 004, 005, 008, 010), 
+  name = c("John Smith", "Jane Adams", "Robert Landry", "Jane Tow", "Raul Tann", "Hilary Joyal"),
+  email_address = c("johnsmith@gmail.com", "janea@gmail.com", "rlabdry@hotmail.com", "janet89@aol.com", "paul.tann1@gmail.com", NA),
+  shipping_address = c("32 Station Road, Edinburgh", "42 Park Drive, Edinburgh", NA, "10 Gardiner Rd, Edinburgh", "12 Main St, Edinburgh", " 234 Queensferry Rd, Edinburgh,")
+)
+
+customers
+```
+
+```{r}
+orders <- tibble(
+  customer_ID = c(001, 002, 005, 010, 012, 001), 
+  order_number = c("KU65781", "SU98201", "JS76821", "YR28212", "JS91221","YR21873"),
+  order_total = c("£32.50", "£56.00", "£100.02", "£20.25", "£39.50", "£45.00"),
+  product_code = c("XZY780", "XYZ123", "XYZ256", "XYZ262", "XYZ345", "XYZ127")
+)
+
+orders 
+```
+
+
+4 mutating join verbs:
+* inner_join() : returns all rows from two tables with matching records.
+* left_join() : returns all records in left table, and any matching records in another.
+==* right_join() : returns all records in right table, and any matching records in another.
+* full_join() : returns all records in both tables, matching where possible.
+
+2 filtering join verbs:
+* semi_join() : returns only rows from the first table where one or more matches are found in the second table.
+* anti_join() : returns only rows from the first table where no matches are found in the second table
+
+2 binding verbs:
+* bind_rows() : add rows to a table
+* bind_cols() : add columns to a table
+
+<whatever type>_join(dfx, dfy, by = NULL, suffix = c(".x", ".y")
+join(datax, datay, c(keyx, keyy),
+)
+```{r}
+inner_join(customers, orders, "customer_ID")
+```
+THIS WILL REPEAT IF IT HAD TWO ROWS IN RIGHT TABLE 
+INCLUDE ALL life then add orders when match 
+```{r}
+left_join(customers, orders, "customer_ID")
+```
+```{r}
+right_join(customers, orders, "customer_ID")
+```
+
+```{r}
+full_join(customers, orders, "customer_ID")
+```
+
