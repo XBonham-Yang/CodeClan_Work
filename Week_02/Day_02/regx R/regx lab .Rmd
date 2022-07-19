@@ -130,33 +130,68 @@ Already! He sat as still as a mouse, in the futile hope that whoever it was migh
 
 Question 1.
 Are the Thought Police ever mentioned?
+```{r}
+str_detect(whole_text, "Thought Police")
+#yes
+```
 
 
 
 Question 2.
 Count how often Big Brother is mentioned
+```{r}
+str_extract_all(whole_text ,"Big Brother")
+```
 
 
 
 Question 3.
 The chapter is written from the point of view of the protagonist, Winston. Does he ever mention the other main character (Julia) by name?
 
-
+```{r}
+str_detect(whole_text, "Julia")
+```
 
 Question 4.
 Winston writes the date in a specific format: month nth, year eg. August 5th, 2019. Write a regular expression to match dates in that format and find the date written in his diary.
+```{r}
+pattern <- "[A-Z][a-z ]+[0-9]+th, [0-9]{4}"
+str_extract(whole_text, pattern)
+```
 
 
 
 Question 5.
 Winston wants some anonymity, redact his name somehow.
+```{r}
+name <- "Winston"
+
+whole_text %>% 
+str_replace_all( name, "****")
+```
 
 
 
 Question 6.
 Stocks of Victory Gin have run out and the people of Oceania will have to drink vodka instead. Replace “gin” with “vodka”, matching case wherever possible. There’s still loads of Victory Coffee, though, so don’t replace that.
 
+```{r}
+pattern1 <- "gin"
+pattern2 <- "Gin"
+
+whole_text %>% 
+str_replace(pattern1, "vodka") %>% 
+  str_replace(pattern2, "Vodka")
+```
 
 
 Question 7.
 Big Brother is rebranding and has decided that the various ministries will now be known as departments. The old departments are now called sections. The Newspeak titles will use “Dep” instead of “Mini”.
+
+```{r}
+pattern3 <- "Mini"
+
+whole_text %>% 
+  str_replace(pattern3, "Dep")
+```
+
