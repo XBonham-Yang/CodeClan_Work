@@ -1,0 +1,226 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#to escape the '' thing 
+
+'hello. i am \' happy' 
+
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+employees <- tibble(
+  first_name = c("Sally", "steven", "Mary", "John"),
+  last_name = c("Smith", "hasTings", "Milne", "Davidson"),
+  postcode = c("EH10 6GH", "EH3 7HL", "G1 7FR", NA), 
+  location = c(" ", "Edinburgh", "", "Stirling")
+)
+
+employees
+```
+
+
+```{r}
+employees %>% 
+  group_by(location) %>% 
+  summarise(n())
+```
+
+```{r}
+mary_location <- employees %>% 
+  filter(first_name == "Mary") %>% 
+  select(location) %>% 
+  pull()
+
+sally_location <- employees %>% 
+  filter(first_name == "Sally") %>% 
+  select(location) %>% 
+  pull()
+```
+
+nchar ==== number of characters 
+
+```{r}
+employees %>% 
+  summarise(nchar(location))
+```
+```{r}
+library(stringr)
+```
+
+```{r}
+str_c("This", "is", "some", "text", sep = " ")
+```
+
+```{r}
+employees %>% 
+  mutate(full_name = str_c (first_name, last_name, sep = " "),
+         .after = last_name)
+  
+```
+```{r}
+employees %>% 
+  mutate(full_name = str_c (first_name, postcode, sep = " "),
+         .after = last_name)
+```
+if NA it will be NA 
+works very similarly as paste 
+ paste will change NA to NA string and will work, other wise the same 
+ 
+```{r}
+pangram <- "The quick brown fox jumps over the lazy dog"
+
+# All letters upper-case
+pangram %>%
+  str_to_upper()
+```
+ str_to_lower()
+ str_to_title()
+ str_to_sentence()
+ 
+```{r}
+employees %>%
+  select(first_name, last_name) %>%
+  mutate(first_name_fixed = str_to_title(first_name)) %>%
+  mutate(last_name_fixed = str_to_title(last_name))
+```
+```{r}
+unbroken_string <- "We're going to break this string up."
+
+unbroken_string %>%
+  str_split(" ") %>%
+  flatten_chr()
+```
+ 
+ flatten_char() it will take it out of a list 
+ 
+ if we did "" then everthing will be returned includes space
+ 
+```{r}
+employees %>% 
+  mutate(postcode_new = str_split(postcode, " ")) %>% 
+  unnest(postcode_new)
+```
+```{r}
+employees %>% 
+  separate_rows(postcode, sep = " ")
+```
+ Concatenate the strings "Manipulating" "strings" "is" "fun!"
+Capitalise the result and save it in a new variable
+Split the formatted string into individual characters
+
+```{r}
+text <- str_c("Manipulating", "strings", "is", "fun!", sep = " ") %>% 
+  str_to_upper()
+str_split(text, "")
+```
+```{r}
+full_string <- "Let's grab a substring from this!"
+
+full_string %>%
+  str_sub(start = 1, end = 5)
+```
+```{r}
+full_string %>%
+  str_sub(start = 6)
+```
+
+```{r}
+full_string %>% 
+  str_sub(-5, -1)
+```
+
+```{r}
+employees %>%
+  mutate(postcode_inner = str_sub(postcode, -3)) %>%
+  mutate(postcode_outer = str_sub(postcode, 1, -4))
+```
+```{r}
+original_string <- "We're going to replace some words."
+original_string
+```
+
+```{r}
+str_sub(original_string, 1, 22) <- "I've changed"
+original_string
+```
+
+```{r}
+number <- 123456.789
+
+number %>%
+  format()
+```
+
+```{r}
+number %>%
+  format(nsmall = 2)
+```
+
+```{r}
+number %>%
+  format(nsmall = 1)
+```
+
+```{r}
+number %>%
+  format(nsmall = 10)
+```
+
+```{r}
+number %>%
+  format(nsmall = 3, decimal.mark = ",")
+```
+
+```{r}
+number %>%
+  format(nsmall = 3, big.mark= ",", big.interval = 3)
+```
+
+spotify_songs <- read_csv("data/spotify_sample.csv")
+Upcase the text in the playlist_name column. Overwrite the existing column to store the result.
+```{r}
+spotify_songs <- read_csv("data_s/spotify_sample.csv")
+
+spotify_songs %>% mutate(playlist_name = str_to_upper(playlist_name))
+```
+
+Lowcase the text in the track_artist column. Store the result in a new column called track_artist_lowcase.
+```{r}
+spotify_songs %>% 
+  mutate(track_artist_lowercase = str_to_lower(track_artist))
+```
+
+Take the first 5 characters of the playlist_id column, and save it in a new column called playlist_start.
+
+```{r}
+spotify_songs %>% 
+  mutate(playlist_start = str_sub(playlist_id, 1, 5) )
+```
+
+Take the first 4 characters of the track_album_release_date column and save it in a new column called year.
+
+```{r}
+spotify_songs %>% 
+  mutate(year = str_sub(track_album_release_date, 1, 4) )
+```
+
+What else can you do to this dataset to practice? Can you work with the numbers? This is open ended - have fun!
+```{r}
+spotify_songs %>% 
+  mutate(dance_round = format(danceability, nsmall = 0),
+         .after = danceability)
+```
+
+
+         tempo = round(tempo, digits = 0),
+         duration_ms = format(duration_ms, big.mark = ",", big.interval = 3),
+         playlist_genre = str_to_title(playlist_genre))
+         
