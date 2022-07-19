@@ -1,0 +1,309 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+```{r}
+single_string <- "string a"
+strings <- c("string a", "string b", "string c", "string d", "striiiiiiing e")
+
+```
+
+```{r}
+pattern <- "a"
+```
+
+```{r}
+single_string %>% 
+  str_detect(pattern, negate = TRUE)
+```
+```{r}
+strings %>% 
+  str_detect(pattern)
+```
+
+```{r}
+pattern <- "str"
+
+strings %>% 
+  str_detect(pattern)
+```
+
+```{r}
+pattern <- "[abc]"
+
+strings %>% 
+  str_detect(pattern)
+```
+so this [] is sort of like a list 
+[a-c] will also work 
+case sensitive 
+[A-Za-z] checks both
+very strange 
+(?i)[A-Z] thing thing aslo ask the R to ignore the case 
+
+```{r}
+pattern <- "[A-Za-z]"
+
+strings %>% 
+  str_detect(pattern)
+```
+
+
+so this one is look are an element 
+that has three i 
+can also do "iii" 
+i{2,} no space, so this will find the ones that has 2 or more than 2 
+but don't know how many 
+
+```{r}
+pattern <- "i{7,}"
+
+strings %>%
+  str_detect(pattern)
+```
+
+"str|gr"
+looking for more than one thing at same time 
+
+```{r}
+pattern <- "str|gr"
+
+strings %>% 
+  str_detect(pattern)
+```
+Make a vector containing the following strings:
+```{r}
+strings <- c("We're having great fun learning about data analysis at CodeClan!",
+"CodeClan is at 37 Castle Terrace in Edinburgh and ClockWise in Glasgow",
+"Our cohort code starts with DE or DR",
+"You get a great view of the castle or the national conservatoire from just outside CodeClan's door")
+
+```
+
+Write and test regular expressions which will match:
+
+Any string mentioning CodeClan
+```{r}
+pattern <- "CodeClan"
+
+strings %>% 
+  str_detect(pattern)
+```
+
+Any string containing two consecutive capital letters
+```{r}
+pattern <- "[A-Z]{2}"
+
+strings %>%
+  str_detect(pattern)
+```
+
+Any string not including the word "castle" or "Castle"
+```{r}
+pattern <- "castle|Castle"
+
+strings %>% 
+  str_detect(pattern, negate = TRUE)
+```
+
+
+castle_pattern <- "[cC]astle"
+
+capital_letter_pattern <- "[A-Z]{2}"
+
+"(?i)castle" ignore case castle 
+
+
+```{r}
+strings <- c(
+  "This string has an_address@email.com in it", 
+  "This one has user.name@company.co.uk", 
+  "Now we've got other_person_123@server.net and my.name@runningoutofideas.com"
+)
+```
+
+str_extract pull out once thing then stop 
+
+
+```{r}
+pattern <- "[a-z]{2,}@"
+
+strings %>% 
+  str_extract(pattern)
+```
+
+
+? - zero or one 
+* - zero or more 
++ - one or more 
+
+```{r}
+string <- "@emailprovider.com"
+
+pattern <- "[a-z]*@emailprovider.com"
+
+string %>% 
+  str_detect(pattern)
+```
+
+
+
+```{r}
+strings <- c(
+  "This string has an_address@email.com in it", 
+  "This one has user.name@company.co.uk", 
+  "Now we've got other_person_123@server.net and my.name@runningoutofideas.com"
+)
+```
+ 
+
+add numbers and things after @
+```{r}
+pattern <- "[a-z0-9]+@[a-z]+"
+
+strings %>% 
+  str_extract(pattern)
+```
+
+add special characters 
+```{r}
+pattern <- "[a-z0-9_\\.]+@[a-z\\.]+"
+
+strings %>%
+  str_extract(pattern)
+```
+
+use str_extract_all to get all
+
+
+```{r}
+strings %>%
+  str_extract_all(pattern)
+```
+
+[^abc] - anything but abc 
+
+see more on cheat sheet 
+check this one 
+##"[a-z0-9[:punct:] +@[a-z[:punct:]]+"
+
+
+```{r}
+pattern = "[a-z0-9_\\.]+@[a-z\\.]+"
+
+strings %>%
+  str_replace_all(pattern, "REDACTED")
+```
+str_replace
+str_remove_all 
+str_remove 
+but the strings set will make no sense 
+
+Make a vector containing the strings:
+```{r}
+list <- c("Colin's mobile number definitely isn't 07777777777.",
+"A landline might be 01010 123456.",
+"Mhairi, Del, Aileen and Steph helped write these notes",
+"I'm called your_name_here and I live in your_town_here.")
+
+```
+
+
+Extract all the names
+
+```{r}
+name <- "[A-Z][a-z]+"
+
+list %>% 
+  str_extract_all(name)
+```
+
+Extract the landline number
+```{r}
+number<- "[0-9 ]+[0-9]+"
+
+list %>% 
+  str_extract_all(number)
+```
+
+Insert your name and where you live into the fourth string
+
+```{r}
+my_name = "your_name_here"
+my_address = "your_town_here"
+
+list %>%
+  str_replace(my_name, "Sarah") %>% 
+  str_replace(my_address, "Falkirk")
+```
+```
+string_vector_2 %>%
+  str_replace_all(c(“[a-z_]+name[a-z_]+” = “Lloyd”, 
+  “[a-z_]+town[a-z_]+” = “Glashow”))
+```  
+  
+
+this thing only returns space amd punctuactions. 
+```{r}
+test <- "a string with numbers and letters 898983 and punctuation!"
+
+test %>% 
+  str_extract_all("[^[:alnum:]]")
+```
+
+
+
+for myself: read it 
+```{r}
+vignette("regular-expressions", "stringr")
+```
+
+```{r}
+test_strings <- c(
+  "abc", 
+  "Abc",
+  "abC",
+  "s"
+)
+```
+^ strats with 
+[]$ ends with 
+```{r}
+pattern <- "^[a-z]"
+pattern2 <- "[a-z]$"
+p3 <- "^[a-z]$" # strat and ends with lower case letetrs 
+test_strings %>% 
+  str_extract_all(p3)
+```
+```{r}
+student <- c("Abigail", "Bjorn", "Caitlin")
+age <- c(25, 56, 40)
+emails <- c("abigal12@company.co.uk", "bsmith@gmail.co.uk", "caitlin_1980")
+
+student_info <- tibble(student, age, emails)
+
+student_info 
+```
+str_detect doesn't work with tibbles 
+```{r}
+student_info %>% 
+  str_detect(emails, "[a-z0-9]+@")
+```
+
+
+```{r}
+student_info %>% 
+  mutate(email_detect = str_detect(emails, "[a-z0-9]+@"))
+```
+```{r}
+student_info %>% 
+  mutate(emails = str_extract(emails, "@[a-z.]+"))
+```
+
+
+
+
