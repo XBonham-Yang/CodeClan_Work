@@ -1,0 +1,237 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+control flow 
+
+### if 
+```{r}
+if_else()
+if(this is true){
+  #then do this
+}
+```
+```{r}
+x <- 10
+
+if (x < 15){
+  print("yes")
+}
+```
+```{r}
+x <- 10
+y <- 3:20
+
+if(x %in% y) {
+  print("yes")
+}
+```
+
+if can't compare more than one thing 
+compare one thing to one thing 
+
+
+```{r}
+
+```
+
+Write an if statement that prints ‘Yes that divides by 2’ if a number x is divisible by 2 (hint: use %% 2 == 0 as your expression), try it out for different values of x.
+
+```{r}
+x = 5
+if(x %% 2 == 0){
+  print("Yes that divides by 2")
+}
+```
+
+if(true){
+do this 
+}else{
+do this 
+}
+
+
+
+```{r}
+x <- 5
+y <- 10
+
+if (x %in% c(3, 4, 5)){
+  
+  print("x is in our list")
+  
+  if (x == 5){
+    
+    print("x is exactly 5")
+    
+  }
+  
+} else {
+  
+  print("Start of else statement")
+  
+  if (y %% x == 0){
+    
+    print("x divides y")
+  
+  } else{
+    
+    print("x does not divide Y")
+  }
+  
+  print ("End of else statement")
+  
+}
+```
+
+###LOOPS 
+for---- used when we know how many iterations we need,
+will end after the desired number of loops 
+
+while ___ when we don't know ,
+will end when conditions met
+
+```{r}
+for stuff 
+    for other stuff
+
+
+```
+
+
+
+```{r}
+a <- 10:20
+for (item in a){
+  print(item)
+}
+```
+```{r}
+weekdays <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+
+for (day in weekdays){
+  pharse <- paste("The day is", day)
+  print(pharse)
+}
+```
+
+### While loop
+
+sometime you can get stuck in an infinite loop
+```{r}
+current_value <- 1
+stop_value <- 10
+
+while(current_value < stop_value){
+  current_value <- current_value +1
+}
+```
+
+What do you think would happen if we didn’t add one to the original current_value (current_value <- current_value + 1), and only included the print() statement?
+
+alternative ways to index for a loop
+
+```{r}
+len_weekdays <- length(weekdays)
+for (i in 1:len_weekdays){
+pharse <- paste("The day is", i)
+print(pharse)
+
+}
+##above prints number 
+
+#below prints elements in weekdays 
+
+for (i in 1:len_weekdays){
+pharse <- paste("The day is", weekdays[i])
+print(pharse)
+
+}
+```
+
+### replacing a vector from a loop ___NOT GOOD 
+
+```{r}
+weekdays <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+
+len_weekdays <- length(weekdays)
+for (i in 1:len_weekdays){
+plural <- paste0(weekdays[i], "s")
+weekdays[i] <- plural
+
+}
+```
+
+Nested for loops 
+```{r}
+n <- matrix (1:12, 4)
+nrows <- nrow(n)
+ncols <- ncol(n)
+
+for (row_i in 1:nrows){
+  print(n[row_i, ])
+}
+
+
+for (row_i in 1:nrows){
+  for(col_i in 1:ncols){
+  print(n[row_i, col_i])
+  }
+}
+```
+
+```{r}
+m <- matrix (rnorm(25),5)
+num_rows <- dim(m)[1]
+num_cols <- dim(m)[2]
+
+for(row_index in 1:num_rows){  # for each row
+  for(col_index in 1:num_cols){ # for each column
+     print(m[row_index, col_index]) # print value at this row and column
+  }
+}
+```
+```{r}
+product_matrix <- matrix(nrow = 5, ncol = 5)
+product_matrix
+```
+
+each entry should be the product of the row index and position index at which the entry occurs. For example, the entry on the third row, fourth column, should be 3×4=12.
+```{r}
+num_rows <- dim(product_matrix)[1]
+num_cols <- dim(product_matrix)[2]
+
+for(r in 1:num_rows){  
+  for(c in 1:num_cols){ 
+     product_matrix[r, c] <-r*c
+  }
+}
+product_matrix
+```
+
+Get the matrix dimensions programatically (so that we could in the future apply this code to any size of matrix with minimal changes).
+
+Hint: you can use the code above as a guide, although we won’t be printing out the matrix entries as we go. Instead, check your code by printing out the whole matrix at the end: just run the single statement product_matrix to do this.
+```{r}
+example_matrix = matrix(1:25, nrow = 5, ncol = 5)
+example_matrix 
+
+for (row_index in 1:5){
+  for (col_index in 1:5){
+    if (row_index == col_index){
+      print(example_matrix[row_index, col_index])
+    }
+   }
+}
+```
+```{r}
+paste0("Today is", weekdays)
+```
+
+
+
+
+
+
+
+

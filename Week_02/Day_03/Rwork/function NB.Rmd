@@ -1,0 +1,55 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+_parameter_ <----> _argument_ 
+
+
+fun_name <- function(par_1, par_2= NULL, par_3 = 'DEFAULT_VALUE"){
+stuff to do 
+the last thing that's done will be the return value
+using return()
+}
+```{r}
+multiply_by_5 <- function(x){
+  x*5
+}
+
+multiply_by_5(2)
+```
+```{r}
+multiply_by <- function(x,y){
+  return(x*y)
+}
+
+multiply_by(2,10)
+```
+
+```{r}
+multiply_by_de <- function(x,y = 3){
+  return(x*y)
+}
+multiply_by_de(5)
+```
+
+
+```{r}
+price_me <- function(x){
+  return(paste0("£",x))
+}
+
+price_me(5)
+```
+```{r}
+n <- 8
+
+multiply_by_n <- function(x){
+    x * n
+}
+
+multiply_by_n(5)
+```
+
+###best practise for writing functions 
+
+

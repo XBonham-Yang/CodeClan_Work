@@ -1,0 +1,176 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```Data structures```
+
+_Matrices and List_ 
+
+```{r}
+x <- list(1, "a", TRUE, c(1,2,3))
+
+x
+```
+
+```{r}
+v <- 1:5
+v 
+```
+
+```{r}
+c(1, "a", TRUE, c(1,2,3))
+```
+
+list can have many types 
+```{r}
+as.list(v)
+```
+###subset 
+
+```{r}
+x[[2]]
+v[2]
+```
+[]- returns list
+[[]]- element of the list 
+
+```{r}
+str(x)
+```
+named list
+```{r}
+named_list <- list (a= "I love R", b = 1:10)
+
+str(named_list)
+
+named_list$a
+```
+
+#df $ col_name => this gives us a vector 
+
+select(df, 1:3)
+df[[1]] gives vector 
+df[1] still a df 
+df["name_col"]
+df[["name_col"]] == same as select then pull()
+
+data frame is a list 
+
+###Nested list 
+
+```{r}
+student_info <- list(
+                "Agnes" = list(height = 1.8, shoe_size = 8L),
+                "Bobby" = list(height = 2.1, gender = "Male"),
+                "Charlie" = list(gender = "Female", likes_beets = TRUE)
+)
+
+student_info
+```
+$ can only do strict names, use this if you won't change again 
+[[]] can use ver inside, this is safer and cahnge more easily 
+
+$ and [[]] are the same 
+
+
+  Make a named list that contains a numeric vector and a character vector.
+  
+```{r}
+a_list <- list(num = 2,
+               chr = "Hello")
+```
+  
+    Access the second element of your list using double square brackets [[]]. What is it’s class?
+    
+```{r}
+a_list[[2]]
+
+class(a_list[[2]])
+```
+
+    Access the second element of your list using single square brackets []. What is it’s class?
+    
+```{r}
+a_list[2]
+
+class(a_list[2])
+```
+    
+    Access the second element of your list by name. What is it’s class?
+```{r}
+a_list$chr
+
+class(a_list$chr)
+```
+matrix can't have more than one type 
+
+as.matrix() turns everything to one type 
+
+#coercion rules 
+
+col order first 
+```{r}
+M <- matrix(1:4, nrow = 2, ncol = 2, byrow = TRUE)
+
+class(M)
+typeof(M)
+```
+
+### Indeexing an matrix
+
+df[row_nums,"col_name/num"]
+df[1:2, 1:2]
+M[1,]----first row 
+M[, 1]____first col
+class(M[,1])---- Is a vector now 
+M[1, 2]-----row first, 1st row, 2nd col 
+M[2:3, 2]-----2-3 rows and 2 col, this gives matrix back again 
+M[c(1,3), 2] --- 1 and 3 rows and 2 col 
+M[, -2] ----remove 2nd col
+
+
+
+```{r}
+v *2
+
+M*2
+
+rowSums(M)
+colSums(M)
+rowMeans(M)
+colMeans(M)
+```
+
+Make a matrix with 3 rows and 4 columns. Each column should contain the numbers 1 to 3.
+```{r}
+exm <- matrix(c(1:3, 1:3, 1:3, 1:3), nrow = 3, ncol = 4)
+exm
+```
+
+Find the element in the 2nd row, 3rd column.
+
+```{r}
+exm[2,3]
+```
+
+
+Check that all the columns are identical by checking that their sums are the same.
+
+```{r}
+colSums(exm)
+```
+
+```{r}
+matrix(1:3, 3, 4)
+rep(1:3, 3) 
+# repeat 3 times 
+rep(1:3, each = 3)
+# 111222333
+
+colnames(exm) <- paste0("col_", 1:4)
+colnames(exm) <- paste0("row_", 1:4)
+M[ ,paste0("col_", 1:2)]
+M[ ,c("col_1","col_2")]
+```
+
