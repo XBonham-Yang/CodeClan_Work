@@ -42,6 +42,13 @@ diet_comp_clean<- diet_comp_clean %>%
   clean_names()
 ```
 
+[]---character class special character special ability doesn't count 
+if the 4 is in the []
+"[2017]$"
+"[0-9]+$"
+"_fao_[0-9]+$"
+
+mutate(kcal_source = str_sub(kcal_source, 1, nchar(kcal_source) - 13))
 
 
 Question 4
