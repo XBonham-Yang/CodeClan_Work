@@ -1,0 +1,94 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+
+is_leap_year <- function(year){
+  if(year %% 100 == 0){
+    if(year %% 400 == 0){
+      return(TRUE)
+    }else{
+      return(FALSE)
+    }
+  }
+  if (year %% 4 == 0){
+    return(TRUE)
+  }else{
+    return(FALSE)
+  }
+}
+```
+
+
+expect_equal() check it gives the correct thing 
+expect_error() check that code give an error 
+```{r}
+a <- 10 
+```
+
+```{r}
+expect_equal(a, 10)
+```
+it does nothing if it works  
+```{r}
+expect_equal(a, 11)
+```
+it gives error if it doesn't work 
+
+
+this test more than one thing 
+NO , HERE 
+```{r}
+test_that("Real leap returns TRUE",{
+  expect_equal(is_leap_year(2020), TRUE)
+  expect_equal(is_leap_year(2000), TRUE)
+})
+```
+```{r}
+test_that("Character input returns an error", {
+  expect_error(is_leap_year("year"))
+})
+```
+```{r}
+test_that("non_numeric input returns an error", {
+  expect_error(is_leap_year("year"))
+  expect_error(is_leap_year(TRUE))
+})
+
+#TRUE was treated as 1 here. 
+```
+
+```{r}
+
+is_leap_year <- function(year){
+  
+  if(!is.numeric(year)){
+    stop("Non_numeric input")
+  }
+    
+  if(year %% 100 == 0){
+    if(year %% 400 == 0){
+      return(TRUE)
+    }else{
+      return(FALSE)
+    }
+  }
+  if (year %% 4 == 0){
+    return(TRUE)
+  }else{
+    return(FALSE)
+  }
+}
+```
+
+```{r}
+
+```
+
+```{r}
+test_that("Non_leap year returns FALSE", {
+  expect_equal(is_leap_year(2017), FALSE)
+  expect_equal(is_leap_year(1900), FALSE)
+})
+```
