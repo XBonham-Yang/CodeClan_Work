@@ -34,13 +34,12 @@ Question 3
 
 Clean kcal_source categories by removing any unnecessary information. Then clean all column names, and rename the column ‘entity’ to ‘country’. Overwrite diet_comp_clean with your results. [Hint: you’ll probably have to use some regex to clean kcal_source categories]
 ```{r}
-pattern <- "[(2017))$]"
-#I don't know why this would work 
+pattern = "[A-Z]{1}[a-z,& ]*[A-Za-z]{1}[a-z]*"
 
-diet_comp_clean <- diet_comp_clean %>%
-  mutate(kcal_source = str_replace_all(kcal_source,pattern, "")) %>% 
+diet_comp_clean<- diet_comp_clean %>% 
+  mutate(kcal_source = str_extract(kcal_source, p)) %>% 
   rename(`country` = `Entity`) %>% 
-   clean_names()
+  clean_names()
 ```
 
 
@@ -80,8 +79,8 @@ Ok, we have no available country codes for Cabo Verde and the US in this dataset
 
 ```{r}
 code <- read_csv("data/country_codes.csv")
-CVP
-USA
+#CVP
+#USA
 ```
 
 
@@ -151,7 +150,7 @@ Back to diet_comp_clean again. For every year between 1990 and 2000, find which 
 ```{r}
 diet_comp_clean %>% 
   filter(year %in% 1990:2000) %>% 
-  filter(kcal_source == "Alcoholic Beverages FAO") %>% 
+  filter(kcal_source == "Alcoholic Beverages") %>% 
   group_by(country) %>% 
   arrange(desc(avg_daily_kcals))
 ```
@@ -162,11 +161,48 @@ Question 12
 
 Now write a function which finds the top calorie source for a user-specified vector of both countries and years. Then use your function to find the top calorie source for the UK and Zimbabwe in 1965, 1975, 1985, 1995 and 2005. Try out your function a few more times for countries/years that you find interesting! Also consider whether there are any limitations of your function.
 
+```{r}
+top_cal_find <- function(c, y){
+   scource = diet_comp_clean %>%
+    filter(country == as.character(c)) %>% 
+    filter(year == y) %>% 
+    slice_max(avg_daily_kcals, n=1) %>% 
+    select(kcal_source)
+   
+   return(scource)
+}
+
+top_cal_find("Zimbabwe",1965)
+top_cal_find("Zimbabwe",1975)
+top_cal_find("Zimbabwe",1985)
+top_cal_find("Zimbabwe",1995)
+top_cal_find("Zimbabwe",2005)
+top_cal_find("United Kingdom",1965)
+top_cal_find("United Kingdom",1975)
+top_cal_find("United Kingdom",1985)
+top_cal_find("United Kingdom",1995)
+top_cal_find("United Kingdom",2005)
+```
+
+
+
 
 
 Question 13
 
 Use your function to find the top calorie source in 1970 for all countries starting with B.
+```{r}
+B_countries <- diet_comp_clean %>% 
+  filter(str_detect(country,"^[B]")) %>% 
+  distinct(country) %>% 
+  pull()
+
+for( b in B_countries){
+  
+  print(paste(b,top_cal_find(b, 1970)))
+  
+}
+```
 
 
 
