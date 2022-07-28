@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# connecting r to database
+
+connect r to postgres database (omni pool)
+don't put log in credentials on github 
+
+be careful with how we work with login details 
+--host name
+--username 
+--database 
+--port 
+--password 
+
+2 main strategies
+-gitignore 
+-outside of git repo 
+
+
+load in our secret logo in into R
+```{r}
+source("secrets.R")
+```
+
+connecting to a database 
+
+```{r}
+library(RPostgres)
+
+db_connection <- dbConnect(
+  drv = Postgres(),
+  host = om_host,
+  port = om_port,
+  dbname = om_atabase,
+  user = om_username,
+  password = om_password,
+  bigint = "numeric"
+)
+# now that we've created our connection, we can remove the log in from the environment
+
+rm(om_username,
+   om_password)
+```
+
+
+# testing connection 
+
+```{r}
+dbListTables(conn = db_connection)
+```
+
+## running queries
+
+```{r}
+employees_table <- dbGetQuery(conn = db_connection,
+           statement = "Select* from employees;")
+```
+
+```{r}
+ library(tidyverse)
+```
+
+```{r}
+employees_table %>% 
+  filter (department == "Legal")
+```
+
+
+
+```{sql, connection = db_connection}
+select*
+from employees 
+limit 10;
+```
+
+
+in the {} notice out 
+```{sql, connection = db_connection, output.var = "out"}
+select*
+from employees 
+limit 10;
+```
+
+can call by R 
+```{r}
+out
+```
+```{r}
+out %>% 
+  select(first_name, last_name, department)
+```
+
+
+```{r}
+dbDisconnect(conn = db_connection)
+```
+
+
