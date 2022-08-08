@@ -1,0 +1,232 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+students <- read.csv("data/students.csv")
+```
+```{r}
+head(students)
+```
+visualise frequency of superpower
+```{r}
+students %>% 
+  ggplot(aes(x = superpower)) +
+  geom_bar()
+
+```
+colour? 
+
+fill in the geom parts --the main part of the area
+colour in geom is the outline colour
+```{r}
+students %>% 
+  ggplot(aes(x = superpower)) +
+  geom_bar(fill = "light blue",
+           colour = "red")
+
+```
+
+
+```{r}
+students %>% 
+  ggplot(aes(x = superpower,
+             fill = school_year)) +
+  geom_bar()
+```
+
+Position adjustments 
+```{r}
+students %>% 
+  ggplot(aes(x = superpower,
+             fill = school_year)) +
+  geom_bar(position = "dodge")
+```
+statistical transformations 
+```{r}
+students %>% 
+  ggplot(aes(x = superpower,
+             fill = school_year))+
+  geom_bar(stat = "count")
+```
+```{r}
+count_data <- students %>% 
+  group_by(superpower, school_year) %>% 
+  summarise(count = n())
+```
+
+
+```{r}
+count_data %>% 
+  ggplot(aes(x = superpower, y = count, fill = school_year)) +
+  geom_bar(stat = "identity")
+```
+
+```{r}
+count_data %>% 
+  ggplot(aes(x = superpower, y = count, fill = school_year)) +
+  geom_col()
+```
+labels
+\n for new lines 
+```{r}
+students %>% 
+  ggplot(aes(x = superpower,
+             fill = school_year)) +
+  geom_bar() +
+  labs(x = "\nSuperpower",
+       y = "Count",
+       title = "Perferred superpower bu school year",
+       subtitle = "Data from students around the world\n",
+       fill = "School Year")
+  
+```
+
+```{r}
+olympic <- read_csv("data/olympics_overall_medals.csv")
+top_10 <- olympic %>% 
+  filter(season == "Summer", medal == "Gold") %>% 
+  arrange(desc(count)) %>% 
+  top_n(10)
+top_10
+```
+```{r}
+top_10 %>% 
+  ggplot(aes(x= team, y = count))+
+  geom_col(fill =  "dark sea green")+
+   labs(x = "\nTeam",
+       y = "Count",
+       title = "Amount of Gold Medals of Top 10 Countries\n")
+#this following graph shows the top 10 gold medal wining countries. 
+#US has a lot more gold medals compared to other countries
+```
+
+layers 
+```{r}
+library(janitor)
+```
+
+
+```{r}
+chick_weight <- ChickWeight %>% 
+  clean_names()
+```
+
+```{r}
+chick_weight %>% 
+  ggplot(aes(x=time,
+             y= weight,
+             group = chick,
+             colour = diet))+
+  geom_line()
+```
+```{r}
+chick_weight %>% 
+  ggplot(aes(x=time,
+             y= weight,
+             colour = diet
+             ))+
+  geom_line(aes(group = chick),
+            alpha = 0.25) +
+  geom_point( alpha = 0.5) +
+  geom_smooth()
+```
+Go back to using the students dataset:
+
+1,Use geom_point to make a scatter graph, with the height of students on the x-axis and their reaction time of the y axis.
+
+2,Make all the points blue. For geom_bar, the colour of the bar is controlled by fill, but for geom_point the colour of the points are controlled by colour.
+
+3,Make the colour of the points depend on the superpower the student wishes they had.
+
+4,Write down what the graph tells you overall.
+
+```{r}
+students %>% 
+  ggplot(aes(x = height_cm, 
+         y = reaction_time
+         ))+
+  geom_point(colour = "blue")+
+  labs(x = "\nHeight",
+       y = "Reaction time",
+       title = "Heigh-Reaction chart\n")
+#No correlations, everyone seems to have similar reaction time 
+```
+```{r}
+students %>% 
+  ggplot(aes(x = height_cm, 
+         y = reaction_time,
+         colour = superpower))+
+  geom_point()+
+    labs(x = "\nHeight",
+       y = "Reaction time",
+       title = "Heigh-Reaction chart",
+       fill = "Superpower",
+       subtitle = "Coloured by superpower preferred\n")
+#still no correlations... 
+```
+
+```{r}
+pets <- read_csv("data/pets.csv")
+```
+Create a labelled scatter plot, of pet age vs. weight, with the following 5 mapping/aesthetics. For items 3-5 you may want to look at the help file of ?geom_point and read about different aesthetics:
+
+1.We want age on the x-axis and weight on the y axis
+2.We want the points to be different colours depending on the gender of the pet
+3.We want different shapes depending on the type of animal
+4.We want all the points to be bigger than normal (size 4).
+5.We also want labels with the pets names next to every point.
+
+```{r}
+pets %>% 
+  ggplot(aes(x = age,
+         y = weight,
+         colour = sex
+         ))+
+  geom_point(aes(shape = animal),
+             alpha = 0.5,
+             size = 4) +
+  geom_text(aes(label = name),
+            hjust=0, vjust=0)+
+  labs(x = "Age",
+       y = "Weight",
+       title = "Weight-Age of pets")
+```
+setting will not have a key on the side and if i do mapping than it will have 
+a key 
+
+```{r}
+ggsave("g1_save.png")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
