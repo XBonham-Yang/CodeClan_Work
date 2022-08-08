@@ -1,0 +1,77 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(janitor)
+
+chick_weight <- clean_names(ChickWeight)
+
+ggplot(chick_weight) + 
+  aes(x = time, y = weight, group = chick, colour = diet) +
+  geom_line()
+```
+
+```{r}
+ggplot(chick_weight) + 
+  aes(x = time, y = weight, group = chick, colour = diet) +
+  geom_line() +
+  facet_wrap(~ diet, nrow = 1)
+```
+```{r}
+benefits <- read_csv("data/benefits.csv")
+```
+Use geom_histogram to create a histogram showing the number of unemployed by age. 
+
+Then facet the graph based on biological sex.
+Hint: geom_histogram is almost the same as geom_bar, but is better suited to plotting continuous data because of the binning.
+
+
+```{r}
+benefits %>% 
+  ggplot(aes(x = age, fill = sex)
+         )+
+  geom_histogram(col = "white")+
+  facet_wrap(~ sex)+
+  labs(x = "Age",
+       y = "Count",
+       fill = "Gender",
+       title = "Unemployed")
+```
+
+
+
+```{r}
+benefits %>% 
+  ggplot(aes(x = age, fill = sex)
+         )+
+  geom_histogram(col = "white")+
+  facet_grid(married ~ sex,
+             labeller = "label_both")
+```
+
+```{r}
+ggplot(benefits) + 
+  geom_histogram(aes(x = age, fill = sex), col = "white") + 
+  facet_wrap(~ sex, ncol = 2, scales = "free_y")
+```
+colour and theme 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
