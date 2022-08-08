@@ -2,18 +2,155 @@
 title: "R Notebook"
 output: html_notebook
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
 ```{r}
-plot(cars)
+library(tidyverse)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```{r}
+pets <- read_csv("data/pets.csv")
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+```{r}
+ggplot(pets) + 
+  aes(weight, age) +
+  geom_point(colour = "#3383cc") 
+```
+colour palettes
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+```{r}
+ggplot(pets) + 
+  aes(x = animal, fill = sex) + 
+  geom_bar()
+```
+
+```{r}
+ggplot(pets) + 
+  aes(x = age, y = weight, colour = sleep) + 
+  geom_point()
+```
+continuous colours sequential & diverging
+scale_colour_gradient() --don't have area
+scale_fill_gradient()--- have area 
+
+```{r}
+ggplot(pets, aes(weight, age, colour = sleep)) +
+  geom_point() +
+  scale_colour_gradient()
+```
+```{r}
+ggplot(pets, aes(weight, age, colour = sleep)) +
+  geom_point() +
+  scale_colour_gradient(low = "lightblue",
+                        high = "lightblue4")
+```
+ scale_colour_gradient2 
+  scale_fill_gradient2
+
+```{r}
+ggplot(pets, aes(weight, age, colour = sleep)) +
+  geom_point() +
+  scale_colour_gradient2(midpoint = median(pets$sleep), low = "blue", high = "red", mid = "white")+
+  theme_bw()
+```
+discrete colours 
+factor is a data type 
+```{r}
+students <- read_csv("data/students.csv")
+
+students <- students %>%
+  mutate(school_year = factor(school_year, levels = c("Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12")))
+```
+
+
+```{r}
+ggplot(students) +
+  aes(x = school_year, fill = superpower) +
+  geom_bar() 
+```
+mannual 
+```{r}
+students %>% 
+  distinct(superpower)
+
+ggplot(students) +
+  aes(x = school_year, fill = superpower) +
+  geom_bar() +
+  scale_fill_manual(
+    values = c(
+      "Fly" = "lightcoral",
+      "Freeze time" = "blue",
+      "Invisibility" = "lightblue",
+      "Telepathy" = "lightpink"
+    )
+  )
+```
+ scale_fill_brewer not countinous
+scale_colour_distiller-- continuous 
+
+```{r}
+pets %>% 
+  ggplot(aes(x= weight,
+             y = age,
+             colour = sleep)) +
+  geom_point() +
+  scale_colour_distiller(palette = "RdPu")
+```
+```{r}
+students %>% 
+  ggplot(aes(x = school_year,
+             fill = superpower))+
+  geom_bar()+
+  scale_fill_brewer(palette =  "Dark2")
+
+```
+```{r}
+library(ggthemes)
+ggplot(students) +
+  aes(x = school_year, fill = superpower) +
+  geom_bar() +
+  scale_fill_wsj()+
+  theme_minimal()
+```
+themes 
+format the text 
+size = rel(1.5) -- 50% larger than normal/ default 
+```{r}
+ggplot(students) +
+  aes(x = school_year, fill = superpower) +
+  geom_bar()  +
+  theme(axis.text.x = element_text(size = 8, angle = 45))
+```
+face makes things bold it's called face 
+```{r}
+ggplot(students) +
+  aes(x = school_year, fill = superpower) +
+  geom_bar()  +
+  theme(axis.text = element_text(face = "bold"))
+```
+
+
+hjust --- horizantal just 0 the star, 1 the end
+vjust --- vertical just 
+```{r}
+ggplot(students) +
+  aes(x = favorite_school_subject) +
+  geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+coord_flip
+flip x and y basiclly turn 90 
+```{r}
+ggplot(students) +
+  aes(x = favorite_school_subject) +
+  geom_bar() +
+  coord_flip()
+```
+
+
+
+
+
+
+
 
