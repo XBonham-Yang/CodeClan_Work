@@ -1,0 +1,81 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+welwyn 15,000
+manchester 50,000
+leeds 70,000
+leatherhead 60,000
+glasgow 80,000
+edinburgh 80,000
+
+```{r}
+library(tidyverse)
+
+total_sale <- CodeClanData::total_sales
+```
+
+
+```{r}
+ggplot(total_sale)+
+  aes(sales,branch)+
+  geom_col(aes(fill = branch == "Leeds"))+
+  scale_fill_manual(values = c("grey", "red"), guide = 'none')
+  
+```
+```{r}
+total_sale_anno <- mutate(total_sale, label_text = ifelse(branch == "Leeds", "The Leeds branch has sales of 715K", NA))
+```
+```{r}
+ggplot(total_sale_anno)+
+  aes(sales,branch)+
+  geom_col(aes(fill = branch == "Leeds"))+
+  scale_fill_manual(values = c("grey", "red"), guide = 'none')+
+  geom_text(aes(label = label_text),
+            colour = "black", 
+            siz = 3,
+            hjust = 0)
+```
+Suppose we’re doing a comparison between January and April now. We want to understand which branches are improving. For this we can look in the dataset monthly_sales. The variable difference_from_january has each month’s sales differences from January.
+```{r}
+monthly_sales <- read_csv("data/monthly_sales.csv") %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "March", "April"))) %>%
+  filter(month == "April") %>% 
+  mutate(growth, ifelse(difference_from_january > 0, "increase", "decrease"))
+
+ggplot(monthly_sales) +
+  aes(x = branch, y = sales, fill = month) +
+  geom_col(position = "dodge") +
+  coord_flip()
+
+```
+
+min_max <- max(abs(monthly_sales_april$difference_from_jan))
+
+
+```{r}
+monthly_sales_april <- monthly_sales %>%
+  filter(month == "April") 
+
+min_max <-max(abs(monthly_sales_april$difference_from_jan))
+  
+
+ggplot(monthly_sales_april) +
+  aes(
+    x = reorder(branch, difference_from_jan),
+    y = difference_from_jan,
+    fill = difference_from_jan > 0
+  ) +
+  geom_col() +
+  ylim(-min_max, min_max) +
+    labs(y = "Difference in sales", x = "Branch location", title = "Sales differences between January and April") + 
+  scale_fill_manual(values = c("tomato", "seagreen"), name = "", labels = c("decrease", "increase")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+
+
+
+
