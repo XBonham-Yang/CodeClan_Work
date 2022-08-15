@@ -1,0 +1,304 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+source('prob.R')
+```
+
+
+```{r}
+s_two_dice <- rolldie(2)
+s_two_dice
+```
+```{r}
+s_two_dice %>% 
+  filter(X1 + X2 == 7)
+```
+```{r}
+s_two_dice <- s_two_dice %>% 
+  mutate(total = X1 + X2)
+s_two_dice
+```
+```{r}
+s_sum_7 <- s_two_dice %>% 
+  filter(total == 7 )
+s_sum_7
+```
+```{r}
+s_sum_b10 <- s_two_dice %>% 
+  filter(total >10 )
+s_sum_b10
+```
+Add your own random variable to s_two_dice, and then use your new random variable to define an event space. Some suggestions:
+random variable: first_die_even, event: first_die_even == TRUE
+
+
+```{r}
+  s_two_dice %>% mutate(even_1 = X1 %% 2 == 0) %>% 
+  filter(even_1 == TRUE)
+```
+
+random variable: die2_minus_die1, event: die2_minus_die1 == -2
+
+```{r}
+s_two_dice %>% 
+  mutate(d2_minus_d1 = X2 - X1) %>% 
+  filter(d2_minus_d1 == -2)
+```
+
+random variable: differ_by_two, event: differ_by_two == FALSE
+```{r}
+s_two_dice %>% 
+  mutate(differ_by_2 = abs(X1-X2)== 2) %>% 
+  filter(differ_by_2 == FALSE)
+```
+```{r}
+s <- rolldie(2)
+total_7 <- s %>% 
+  filter(X1 + X2 == 7)
+total_7
+```
+```{r}
+nrow(total_7)/nrow(s)
+```
+mulitiple step experiments
+
+```{r}
+s_die <- rolldie(1)
+s_coin <- tosscoin(1)
+
+s_total <- merge(s_coin, s_die)
+
+head_six <- s_total %>% 
+  filter(toss1 == "H", X1 == 6)
+
+nrow(head_six)/nrow(s_total)
+```
+10*9*8
+
+```{r}
+library(gtools)
+```
+```{r}
+permutations(4,4, repeats.allowed = TRUE)
+```
+```{r}
+employees <- c("Alice", "Bob", "Carole", "David", "Elaine", "Fred", "Gabra", "Hua", "Inigo", "Hugo")
+```
+
+```{r}
+seniors <- as.tibble(permutations(n = 10, r = 3, v = employees))
+seniors
+```
+
+```{r}
+seniors <- seniors %>% 
+  rename(CEO = V1, CTO = V2, COO = V3)
+seniors
+```
+```{r}
+seniors %>% 
+  filter(CEO == 'Alice', CTO == 'Bob')
+```
+choose(n, r)
+Use the combinations() function in gtools for this task (don’t try to do it manually). I have five flavours of ice cream to choose from:
+flavours <- c("vanilla", "chocolate", "raspberry", "strawberry", "pistachio")
+and a bowl that can hold three scoops. How many different variations in bowls of ice cream can I have assuming:
+Each scoop must be a different flavour
+I can repeat flavours if I wish?
+
+```{r}
+flavours <- c("vanilla", "chocolate", "raspberry", "strawberry", "pistachio")
+```
+
+```{r}
+ice_cream <- as.tibble(combinations(5, 3, v = flavours))
+ice_cream
+```
+```{r}
+s_four_coins <- tosscoin(4)
+s_four_coins
+```
+p(2 heads)
+```{r}
+s_four_coins <- s_four_coins %>% 
+  mutate(num_head = rowSums(. =="H"))
+```
+
+```{r}
+s_at_least_2_heads <- s_four_coins %>% 
+  filter(num_head >= 2)
+s_at_least_2_heads
+```
+```{r}
+prob_2_heads <- nrow(s_at_least_2_heads)/ nrow(s_four_coins)
+```
+
+
+```{r}
+1 - prob_2_heads
+```
+##and combinations 
+event a : {1,2,3,4}
+event b : {3,4,5,6}
+
+```{r}
+#that's how i understand this.
+rolldie(1) %>% 
+  filter(X1 %in% 1:4 & X1 %in% 3:6) 
+```
+```{r}
+s_four_coins %>% 
+  mutate(num_tails = rowSums(. == 'T')) %>% 
+  filter(num_head >= 1, num_tails >= 1) %>% 
+  summarise(prob = n()/ nrow(s_four_coins))
+```
+## mutually exclusive events 
+
+
+## or combination 
+event a : row an even number {2,4,6}
+event b : {4,5}
+
+```{r}
+rolldie(1) %>% 
+  filter(X1 %in% c(2,4,6) | X1 %in% c(4,5))
+```
+Optional Task - 10 mins
+Let’s check the addition law for ourselves. Calculate probabilities for each event below:
+    first_die_even
+```{r}
+s_two_dice %>% 
+  filter(X1 %% 2 == 0) %>% 
+  summarise(prob = n()/nrow(s_two_dice))
+```
+    
+second_die_5
+```{r}
+s_two_dice %>% 
+  filter(X2 == 5) %>% 
+  summarise(prob = n()/nrow(s_two_dice))
+```
+
+first_die_even AND second_die_5
+```{r}
+s_two_dice %>% 
+  filter(X1 %% 2 == 0 & X2 == 5) %>% 
+  summarise(prob = n()/nrow(s_two_dice))
+```
+
+Then use these probabilities in the expression from above
+prob(A∪B)=prob(A)+prob(B)−prob(A∩B)
+```{r}
+
+```
+
+
+and check you get the same probability for prob(first_die_even OR second_die_5)
+as we obtained from the last block of code.
+```{r}
+s_two_dice %>% 
+  filter(X1 %% 2 == 0 | X2 == 5) %>% 
+  summarise(prob = n()/nrow(s_two_dice))
+```
+```{r}
+ 0.5 + 0.1667 - 0.0833
+```
+```{r}
+library(janitor)
+```
+```{r}
+cb <- read_csv('data/colour_blindness.csv')
+```
+p(a|b) = prob (event a given event b )
+indepentdent  event:
+p(A|B) = P(A) 
+dependent event:
+P(A|B) != P(A)
+
+```{r}
+cb
+```
+```{r}
+cb %>% 
+  tabyl(bio_sex, cblind) %>% 
+  adorn_totals(where = c('row', 'col'))
+
+cb %>% 
+  tabyl(bio_sex, cblind) %>% 
+  adorn_percentages(denominator = 'all') %>% 
+  adorn_title()
+```
+```{r}
+prob_female <- cb %>% 
+  summarize(prob = sum(bio_sex == 'female')/ n())
+prob_female
+```
+being male 
+being colour blind 
+not being colour blind
+
+```{r}
+prob_male <- cb %>% 
+  summarize(prob = sum(bio_sex == 'male')/ n())
+prob_male
+```
+```{r}
+prob_cb <- cb %>% 
+  summarize(prob = sum(cblind == TRUE)/ n())
+prob_cb
+```
+```{r}
+prob_not_cb <- cb %>% 
+  summarize(prob = sum(cblind == FALSE)/ n())
+prob_not_cb
+```
+```{r}
+prob_female_cb <- cb %>% 
+  filter(bio_sex == 'female', cblind) %>% 
+  summarise(prob = n()/ nrow(cb))
+
+prob_male_cb <- cb %>% 
+  filter(bio_sex == 'male', cblind) %>% 
+  summarise(prob = n()/ nrow(cb))
+
+prob_female_cb
+prob_male_cb
+```
+##dependent and independent 
+
+```{r}
+prob_female * prob_cb
+prob_female_cb
+```
+## conditional prob
+prob of cblind giving that we know they are female 
+```{r}
+prob_female_cb/prob_female
+```
+
+```{r}
+cb %>% 
+  filter(bio_sex == 'female') %>% 
+  summarise(prob = mean(cblind))
+```
+```{r}
+prob_cb_given_male = cb %>%
+  filter(bio_sex == "male") %>%
+  summarise(prob = sum(cblind) / n())
+
+prob_cb_given_male
+```
+
+
+
+
+
+
+
