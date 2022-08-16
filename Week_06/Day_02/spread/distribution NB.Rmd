@@ -1,0 +1,255 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+how does our distribution look like ?
+how far apart are the values typically?
+is it a very narrow and tall or wide and short?
+
+Range 
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+jobs <- read_csv('data/TyrellCorpJobs.csv')
+```
+```{r}
+jobs<-jobs %>% 
+  select(-1) %>% 
+  clean_names()
+```
+
+```{r}
+jobs %>% 
+  summarise(range = diff(range(salary)))
+
+```
+
+
+```{r}
+jobs %>% 
+  ggplot(aes(salary))+
+  geom_histogram(col = 'white', fill = 'pink', bins = 25)
+```
+
+
+```{r}
+jobs %>% 
+  ggplot(aes(salary))+
+  geom_histogram(col = 'white', fill = 'pink', bins = 25)+
+  facet_wrap(~position)
+```
+so there is strong evidence of bimodality 
+from now on, consider the two distribution (one for each position).
+
+```{r}
+jobs %>% 
+  group_by(position) %>% 
+  summarise(
+    range = diff(range(salary))
+  )
+```
+there is more salary disparity in management than in accounting 
+
+range is heavily effected by extreme values 
+
+Last influence by outlier is the interquartile range 
+
+```{r}
+jobs %>% 
+  group_by(position) %>% 
+  summarise(
+    q1 = quantile(salary, 0.25),
+    q2 = quantile(salary, 0.5),
+    q3 = quantile(salary, 0.75),
+    iqr = q3 - q1,
+    iqr_stas = IQR(salary)
+  )
+```
+the five figure salary 
+```{r}
+summary(jobs)
+```
+```{r}
+library(skimr)
+```
+
+```{r}
+jobs %>% 
+  group_by(position) %>% 
+  skim()
+```
+min value = 10 
+max value = 500
+q1 = 120
+q2 = 135
+q3 = 150
+
+a more graphical view of quartiles : box plots
+```{r}
+jobs %>% 
+  group_by(position) %>% 
+  summarise(
+    q1 = quantile(salary, 0.25),
+    q2 = quantile(salary, 0.5),
+    q3 = quantile(salary, 0.75),
+    iqr = q3 - q1,
+    outlier_distance = 1.5 *iqr
+  )
+```
+
+```{r}
+jobs %>% 
+  ggplot()+
+  aes(salary, y = position)+
+  geom_boxplot()+
+  stat_boxplot(geom = 'errorbar', width = 0.5)
+```
+
+
+```{r}
+set.seed(42)
+distribution_1 <- tibble(
+  y = append(rnorm(n = 100, mean = 5, sd = 10), rnorm(n = 200, mean = 5, sd = 1))
+)
+
+distribution_2 <- tibble(
+  y = runif(n = 1000, min = -30, max = 30)
+)
+```
+
+Investigate and comment on the centrality and spreads of distribution_1 and distribution_2 produced by the following function calls.
+Use geom_boxplot() and skim() first
+Next, plot histograms to confirm your descriptions.
+[Don’t worry about what the functions generating distribution_1 and distribution_2 are doing]
+
+```{r}
+distribution_1 %>% skim()
+
+distribution_1 %>% ggplot(
+  aes(y)
+)+
+  geom_boxplot()+
+  stat_boxplot(geom = 'errorbar', width = 0.5)
+#left skew, concentrated around 3-7
+```
+```{r}
+distribution_2 %>% skim()
+
+distribution_2 %>% ggplot(
+  aes(y)
+)+
+  geom_boxplot()+
+  stat_boxplot(geom = 'errorbar', width = 0.5)
+#symmetric, normal distribution 
+```
+```{r}
+distribution_1 %>% 
+  ggplot()+
+  aes(y)+
+  geom_histogram()
+```
+
+```{r}
+distribution_2 %>% 
+  ggplot()+
+  aes(y)+
+  geom_histogram()
+```
+
+```{r}
+r_skew <- read_csv('data/heavily_right_skewed.csv')
+```
+
+```{r}
+r_skew %>% 
+  summarise(skew = skewness(x, type = 1))
+```
+
+```{r}
+r_skew %>% 
+  ggplot(aes(x))+
+  geom_boxplot()
+```
+a long tail of outliers to the right of the box 
+median is more in the left hand side 
+
+```{r}
+r_skew %>% 
+  ggplot(aes(x))+
+  geom_histogram()
+```
+
+```{r}
+r_skew %>% 
+  skim()
+```
+## variance 
+a single number value for measure of spread
+
+a measure of how far each value in the data set is 
+from the mean 
+
+```{r}
+davids_numbers <- c(3,6,4,20,4)
+mean(davids_numbers)
+variance = su
+```
+
+sum of the difference from the mean squared and then divided by the total 
+number of elements - 1
+
+mean difference from the mean 
+
+```{r}
+set.seed(42)
+
+londoner_weights <- tibble(
+  marathoners = rnorm(50, mean = 68, sd = 0.5),
+  commuters = rnorm(50, mean = 68, sd = 5)
+) %>% 
+  pivot_longer(cols = everything(), names_to = "group", values_to = "weight")
+
+ggplot(londoner_weights) +
+  aes(x = weight, y = group) +
+  geom_boxplot()
+```
+a hypothetical example 
+
+- we've surveyed some londoner about their weight 
+
+two groups survyers 
+
+```{r}
+londoner_weights %>% 
+  group_by(group) %>% 
+  summarise(mean_weight = mean(weight),
+            var = var(weight),
+            st_dev = sd(weight))
+```
+weight = kg
+variance = kg ^2 
+st dev = sqrt(variance) = kg 
+
+the average deviance from the mean weight of commuters (68.5kg) was 4.6 kg 
+
+calculating variance longhand
+$$
+s^2 = \frac{1}{n-1}\sum{(x- \bar{x})}
+$$
+```{r}
+jobs %>% 
+  group_by(Position) %>% 
+  summarise(var = var(Salary),
+            sd = sd(Salary))
+```
+very big salary difference within management and more spread out than 
+accounting 
+
+
+
+
+
+

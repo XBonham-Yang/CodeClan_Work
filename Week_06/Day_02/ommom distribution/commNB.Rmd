@@ -1,0 +1,278 @@
+---
+title: "common distributions"
+output: html_notebook
+---
+variables 
+number of people love the colour blue == discrete value countable 
+height of people == countinous 
+
+
+age == continous numeric 
+age group (child, adult, senior) == ordinal categoric
+numer of people in house hold == discrete numeric 
+heigh/weight == continuous numeric 
+shoe size == continuous numeric 
+vegetarian == nominal categoric (binary)
+
+
+## probability mass and probability density function 
+discrete probability distribution is a probability distribution of a discrete variable 
+
+heads or tail, discrete number of outcomes 
+
+probability mass function -> prob distribution of a discrete variable 
+
+probability density function -> prob distribution of a continouse variabele 
+
+(what is the prob of heights in the range from 174.22cm - 178.91cm )
+
+in the case of pmf and pdf while we can measure prob for specific discrete values of pmf we can't for pdf 
+
+we look at the prob of a range of a values 
+
+rules for probabiliuty distributions 
+
+- outcome is our x 
+- y is probability of that outcome occuring (pmfs)
+-the sum of all prob must be 1 
+- each prob must be between 0 and 1 
+
+rules for continous probability distribution 
+-outcome are still x 
+- y = p(x) probability density 
+- the area under the curve must be 1 
+
+
+```{r}
+library(tidyverse)
+```
+```{r}
+source('prob.R')
+```
+via cumulative distribution functions 
+
+F(1) = 1/6
+F(2) = 1/6 + 1/6 
+```{r}
+#cdf for rolling one die
+
+rolldie(1) %>% 
+  mutate(p = 1/n()) %>% 
+  mutate(f_x = cumsum(p)) %>% 
+  ggplot(aes(X1, f_x))+
+  geom_step()
+```
+getting individual probability from cdfs
+p(3) = f(3) - f(2) = 0.5 - 0.33 = 0.16
+p(4) = f(4) - f(3)
+
+continous uniform 
+lengths of 'brian breaks' at codeclan were monitored for a week, 
+they were found to be distributed uniformly (equal p for all outcomes) 
+between 3 mins and  22 mins 
+
+l is continuous 
+ 
+what will it look like?
+
+useful distribution functions 
+p - cumulative density function
+q - quantile
+r -random number 
+d - distribution
+ # the following gives you distribution 
+```{r}
+dunif(x = seq(4, 23, 0.1), min = 5, max = 22)
+```
+```{r}
+brain_breaks <- tibble(
+  length = seq(4, 23, 0.1),
+  f_length = dunif(x = length, min = 5, max = 22)
+)
+
+brain_breaks %>% 
+  ggplot(aes(x = length, y = f_length))+
+  geom_line()
+```
+
+```{r}
+brain_breaks %>% 
+  mutate(F_length = punif(q = length, min = 5, max = 22)) %>% 
+  ggplot(aes(x = length, y = F_length))+
+  geom_line()
+```
+what is the prob of a brain break between 8.4 and 10.7?
+f(10.7) - f(8.4)
+```{r}
+f_10_7 <- punif(
+  q = 10.7, min = 5, max = 22
+)
+
+f_8_4 <-punif(
+  q = 8.4, min = 5, max = 22
+)
+
+f_10_7 - f_8_4
+```
+
+what does it look like on plot
+
+```{r}
+brain_breaks %>% 
+  ggplot(aes(x = length, y = f_length))+
+  geom_line()+
+  geom_ribbon(aes(ymin = 0, ymax = ifelse(
+    length >= 8.4 & length <= 10.7, f_length, 0)),
+    fill = "red", alpha = 0.6)
+```
+
+```{r}
+(10.7 - 8.4) * max(brain_breaks$f_length)
+```
+normal distribution 
+
+```{r}
+three_norm <- tibble(
+  x = seq(0, 100, 1),
+  f1_x = dnorm(x = x, mean = 50, sd = 10),
+  f2_x = dnorm(x = x, mean = 50, sd = 20),
+  f3_x = dnorm(x = x, mean = 50, sd = 30)
+)
+```
+
+
+```{r}
+three_norm %>% 
+  ggplot()+
+  geom_line(aes( x, f1_x), col = 'red')+
+  geom_line(aes( x, f2_x), col = 'blue')+
+  geom_line(aes( x, f3_x), col = 'yellow')
+```
+
+```{r}
+library(janitor)
+```
+
+```{r}
+jobs <- read_csv("data/TyrellCorpJobs.csv") %>%
+  clean_names()
+```
+
+
+```{r}
+accounts_salary_stats <- jobs %>%
+  filter(position == "Accounting") %>%
+  summarise(
+    num = n(),
+    mean = mean(salary),
+    sd = sd(salary)
+  )
+accounts_salary_stats
+```
+plot the histogram 
+change the meric of the histogram with aes(y = ..density..)
+use stat function and pre_calculated stats to overlay a normal distrubution 
+
+
+
+```{r}
+jobs %>% 
+  filter(position == "Accounting") %>%
+  ggplot(aes(x = salary)) +
+  geom_histogram(aes(y = ..density..), col = "white", bins = 25) +
+  stat_function(
+    fun = dnorm, 
+    args = list(
+      mean = accounts_salary_stats$mean, 
+      sd = accounts_salary_stats$sd
+    ),
+    col = "red"
+  )
+```
+qqplot quantile plots 
+normality test 
+look at a normal distribution vs our data 
+fitting a normal distribution to data set 
+
+
+standard normal 
+scaled so that the mean = 0, sd = 1
+standarised variable (too to describe normal distributions)
+z = x - xbar / s 
+
+z = 1.3 then the value is 1.3 * sd away from the mean value 
+z = 3 would be 3 * sd .......
+
+another def of outlier 
+any value of z above 3 
+1.5 iqr away from q 3 or q1 
+
+```{r}
+management_scaled <- jobs %>%
+  filter(position == "Management") %>%
+  # scale automaticlly calculates z score 
+  mutate(z_salary = scale(salary)) %>% 
+  mutate(mean_sl = mean(salary))
+
+management_scaled
+```
+
+```{r}
+management_scaled %>%
+  filter(!between(z_salary, left = -3, right = 3))
+```
+
+
+```{r}
+standard_normal <- tibble(
+  z = seq(from = -4, to = 4, by = 0.01),
+  f_z = dnorm(x = z)
+)
+
+standard_normal %>%
+  ggplot(aes(x = z, y = f_z)) +
+  geom_line()
+```
+
+
+```{r}
+shade_standard_normal <- function(shade_from, shade_to){
+  standard_normal <- tibble(
+    z = seq(from = -4, to = 4, by = 0.001),
+    f_z = dnorm(x = z)
+  )
+  standard_normal %>%
+    ggplot(aes(x = z, y = f_z)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = 0, ymax = ifelse(z >= shade_from & z <= shade_to, f_z, 0)), fill = "red", alpha = 0.6)
+}
+
+shade_standard_normal(shade_from = -Inf, shade_to = 0)
+```
+
+```{r}
+shade_standard_normal(shade_from = -1, shade_to = 1)
+```
+most values lie with 3 sd dev of the mean 
+let's calculate how many values should lie within 1 sd of mean for a standard normal distribution 
+
+```{r}
+# one st dev above - one sd dev below 
+100*(pnorm(q = 1) - pnorm(q = -1))
+```
+
+68% of our data shoudl lie with in st dev of the mean 
+
+
+```{r}
+100*(pnorm(q = 2) - pnorm(q = -2))
+```
+```{r}
+shade_standard_normal(shade_from = -2, shade_to = 2)
+```
+```{r}
+
+100*(pnorm(q = 3) - pnorm(q = -3))
+
+```
+

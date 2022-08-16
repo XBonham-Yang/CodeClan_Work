@@ -1,0 +1,169 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+distribution 
+[probability distribution]
+[frequency distribution]
+
+```{r}
+library(tidyverse)
+source('prob.R')
+```
+```{r}
+tosscoin(1) %>% 
+  mutate(p = 1/n())
+```
+```{r}
+s_three_coins <- tosscoin(3)
+```
+
+```{r}
+s_three_coins %>% 
+  mutate(outcomes = str_c(toss1,toss2, toss3, sep = ""),
+         p = 1/n()) %>% 
+  ggplot()+
+  aes(outcomes, p)+
+  geom_col(fill = 'lightblue')
+```
+-uniform distribution, all same probability
+
+a bit more interesting 
+```{r}
+s_3_coins_lab <- s_three_coins %>% 
+  mutate(outcomes = str_c(toss1,toss2, toss3, sep = ""),
+         p = 1/n())
+```
+
+what's the prob of getting 0,1,2,3 heads 
+```{r}
+s_3_coins_lab %>% 
+  mutate(n_head = str_count(outcomes, 'H')) %>% 
+  group_by(n_head) %>% 
+  summarise(p = sum(p)) %>% 
+  ggplot()+
+  aes(n_head, p)+
+  geom_col(fill = 'pink')
+```
+-this is a discrete probability distribution (finite/countable)
+
+$$
+\sum{p(x)}=1
+$$
+#measures of centrality 
+
+-mean
+-median
+-mode
+
+these are all expressing where the centre of our disribution is.
+They are different measure of the middle of a distribution 
+
+```{r}
+library(janitor)
+library(lubridate)
+```
+```{r}
+air_con <- read_csv('data/AirConSales.csv')
+```
+```{r}
+air_con <- air_con %>% 
+  clean_names() %>% 
+  mutate(date = mdy(date))
+#it asked what format it is in and gives yyyymmdd
+```
+for every date, we've got how many air conditioners were sold.
+we are interested though, in how often it is to sell a certain number of acs
+e.g how often how likely is it we sell 3 
+
+```{r}
+sales_freqs <- air_con %>% 
+  tabyl(units_sold)
+```
+
+perent here doesn't refer to a probability/percent but a relative frequency(which is subtely different)
+
+```{r}
+sales_freqs %>% 
+  ggplot()+
+  aes(units_sold, percent)+
+  geom_col()
+```
+Mean
+$$
+\mu = population
+$$
+$$
+\bar{x} = a\, sample
+$$
+inferential statistics 
+mean
+```{r}
+air_con %>% 
+  summarise(mean_daily = mean(units_sold),
+            mean_long = sum(units_sold)/n())
+```
+medain 
+```{r}
+air_con %>% 
+  summarise(median_daily = median(units_sold))
+```
+Mode
+- the most commonly occurring value
+```{r}
+get_mode <- function(data){
+
+  tabled_data <- table(data)
+  table_names <- names(tabled_data)
+  
+  return( table_names[tabled_data == max(tabled_data)] )
+  
+}
+```
+
+
+```{r}
+air_con %>% 
+  summarise(mode_daily = get_mode(units_sold))
+```
+distribution shape(modality)
+
+how mnay modes does the distribution have?
+one mode  = unimodal
+two modes =bimodal
+
+skewness  - the asymmetry of a distribution 
+left skewed (tail of the distribution points left)
+right skewed (tail of the distribution points right)
+symmetric(neither left or right skewed)
+
+
+can think about skew where the mean is to the medain 
+
+we can quantify skew(express numerically)
+
+```{r}
+library(e1071)
+```
+
+|magnitude classification 
+|<0.5 fairly symmetric
+|0.5 - 1 moderatly skewed 
+|>1 highly skewed 
+
+|direction classification 
+|negative | left skew|
+|positive | right skew|
+
+skew = -0.8 (moderately left skewed)
+skew = 1.2 (highly right skewed)
+
+using {e1071}
+
+```{r}
+air_con %>% 
+  summarise(
+    skew = skewness(units_sold, type = 1)
+  )
+```
+
