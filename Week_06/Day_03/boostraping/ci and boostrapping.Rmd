@@ -1,0 +1,135 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(infer)
+library(janitor)
+
+telco <- read_csv("data/telecomms_churn.csv")
+telco <- clean_names(telco)
+
+sample_200 <- telco %>%
+  rep_sample_n(size = 200, reps = 1)
+
+summary_sample_200 <- sample_200 %>%
+  ungroup() %>%
+  summarise(
+    mean_monthly_charges = mean(monthly_charges), 
+    mean_tenure = mean(tenure),
+    prop_churn = mean(churn == "Yes")
+  ) 
+summary_sample_200
+```
+
+```{r}
+summary_pop <- telco %>%
+  summarise(mean_monthly_charges = mean(monthly_charges),
+            mean_tenure = mean(tenure),
+            prop_churn = mean(churn == "Yes")
+  )
+
+summary_pop
+```
+```{r}
+sample_200 <- read_csv("data/telecomms_churn_200_sample.csv") %>%
+  clean_names()
+```
+
+```{r}
+sample_200 %>%
+  glimpse()
+```
+
+```{r}
+bootstrap_resample_200 <- sample_200 %>%
+  rep_sample_n(size = 200, replace = TRUE, reps = 5000) %>%
+  summarise(
+    mean_tenure = mean(tenure)
+  )
+```
+
+
+Plot a histogram of the bootstrapped sampling distribution
+Calculate the standard error in mean(tenure) and compare it with the previous value 1.72 months [remember: this is just the sd() of the sampling distribution]
+```{r}
+bootstrap_resample_200 %>% 
+  ggplot(aes(mean_tenure))+
+  geom_histogram(col = "white")
+```
+```{r}
+bootstrap_resample_200 %>% 
+  summarise(
+    se_tenure_mean = sd(mean_tenure)
+  )
+```
+CI
+```{r}
+bootstrap_resample_200 %>%
+  ggplot(aes(x = mean_tenure)) +
+  geom_histogram(col = "white", fill = "steel blue", alpha = 0.7)
+```
+
+```{r}
+ci_95 <- bootstrap_resample_200 %>%
+  summarise(
+    mean = mean(mean_tenure),
+    lower_bound = quantile(mean_tenure, probs = 0.025),
+    upper_bound = quantile(mean_tenure, probs = 0.975)
+  )
+
+ci_95
+```
+```{r}
+ci_99 <- bootstrap_resample_200 %>%
+  summarise(
+    mean = mean(mean_tenure),
+    lower_bound = quantile(mean_tenure, probs = 0.005),
+    upper_bound = quantile(mean_tenure, probs = 0.985)
+  )
+
+ci_99
+```
+using infer 
+```{r}
+infer_resample <- sample_200 %>%
+  specify(response = tenure) %>%
+  generate(reps = 5000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+```
+
+```{r}
+infer_ci_95 <- infer_resample %>%
+  get_ci(level = 0.95, type = "percentile")
+
+infer_ci_95
+```
+```{r}
+infer_resample %>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = infer_ci_95)
+```
+
+```{r}
+mean_infer <- infer_resample %>%
+  summarise(mean = mean(stat))
+
+mean_infer
+```
+```{r}
+sample_200 %>%
+  summarise(mean(tenure))
+```
+```{r}
+bootstrap_resample <- sample_200 %>%
+  specify(response = churn, success = "Yes") %>%
+  generate(reps = 5000, type = "bootstrap") %>%
+  calculate(stat = "prop")
+
+head(bootstrap_resample)
+```
+
+
+
+
