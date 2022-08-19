@@ -1,0 +1,478 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+hypothesis tests 
+```{r}
+library(tidyverse)
+library(janitor)
+library(infer)
+
+books <- read_csv("data_1/books.csv")
+
+books_tidy <- books %>%
+  clean_names() %>%
+  filter(!is.na(average_rating)) %>%
+  rename(num_pages = number_num_pages) %>%
+  glimpse()
+```
+
+
+```{r}
+books_tidy %>% 
+  ggplot(aes(average_rating))+
+  geom_histogram(col = "white")
+```
+the 2020 average rating is different from 2016 
+
+```{r}
+observed_stats <- mean(books$average_rating, na.rm = TRUE)
+#average rating is 3.93756
+```
+#2016 is 3.93
+#2020 is 3.937568
+set up two competing hypothesis 
+
+_Null hypothesis_ :H0 $H_0$
+Null hypothesis  is framed as the skeptical position 
+--the hypothesis of no difference /no change /things are the same 
+the H0: avg rating 2020 is not different from avg rating 2016 
+_Alternative hypothesis_ H1 $H_1$ $H_a$
+Alternative hypothesis of difference 
+the H1: avg rating of 2020 is the same as 2016 
+
+our 2 hypothesis must be 
+- mutually exclusive 
+- exhaustive (cover every possible outcomes)
+
+$$
+H_0:μ_{average\ rating} = 3.93
+$$
+
+$$
+H_0:μ_{average\ rating} \neq 3.93
+$$
+greek letter used to represent population parameters
+$$
+\mu = population \ mean \\\\\\\\\\
+\pi = population\ proportion 
+$$
+latin letter for estimates
+#2016 is 3.93
+#2020 is 3.937568 
+is this difference _significant_
+
+##steps of hypothesis test 
+>step1
+
+_before_ we look at the data 
+decide on our _significant level_(alpha level) : set a threshold for what counts as significant, set the error rate, it will dictate how often we wrongly declare significance 
+- so with a of 0.05, we can expect to be wrongly reject HO 1 time in 20 
+
+by convention, at least very often, the most common alpha level is _0.05_
+
+>step2 
+
+calculate the statistic
+in this case it's the mean 
+
+>step3
+
+create the sampling distribution we'll do this by bootstrapping 
+_very important_ 
+when we create the sampling distribution 
+we _assume that it is true_
+
+>step4 
+
+compare our calculated statistic with the sampling distribution 
+
+if the calculated stat is far enough into the the tail of our normal 
+distribution , we call it significant 
+p_value 
+
+>step5
+
+if the p_value is < alpha we _reject_ H0 
+if the p_value is NOT < alpha we _do not reject_ H0 
+    didn't say we _accept_ the H0 
+    
+if the p_value is < alpha we _reject_ H0 
+   find evidence in support of our H1
+if the p_value is NOT < alpha we _do not reject_ H0 
+    didn't say we _accept_ the H0 
+    failed to find evidence in support of our H1
+ 
+ 
+hypothesis with infer   
+```{r}
+null_distribution<- books_tidy %>%
+  specify(response = average_rating) %>%
+  hypothesise(null = 'point', mu = 3.93) %>% 
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+
+null_distribution
+```
+```{r}
+null_distribution %>% 
+  visualise(bins = 20) +
+  shade_p_value(obs_stat = observed_stats, direction = 'both')
+observed_stats
+#two tailed test no direction is specified
+```
+
+can do one tail test eg: mu > 3.93 
+```{r}
+null_distribution %>% 
+  visualise(bins = 20) +
+  shade_p_value(obs_stat = observed_stats, direction = 'greater')
+observed_stats
+```
+```{r}
+null_distribution %>% 
+  visualise(bins = 20) +
+  shade_p_value(obs_stat = observed_stats, direction = 'both')
+
+p_value <- null_distribution %>% 
+  get_p_value(obs_stat = observed_stats, direction = 'both')
+```
+what does p_value means?
+> how likely is it to see a result as extreme as your observed result, if the null hypothesus is true 
+
+(extreme means p is less than alpha=0.05)
+
+> is the null was true, how weird would this data be 
+
+_don't say P_VALUE is the probability that H0 is correct_
+
+our observed stat of 3.937.. is significantly different from our NULL stat of 3.93 at alpha level of 0.05, we therefore find evidence in support of out alternative hypothesis 
+
+```{r}
+books_tidy %>% 
+  group_by(text_reviews_count) %>% 
+  summarise(prop= n()/nrow(books_tidy)) %>% 
+  filter(text_reviews_count == 0)
+```
+
+
+>step1
+
+N0: prop(lack of text_reviews_count) = 0.7
+N1: prop(lack of text_review_count) not = 0.7
+
+
+>step2 
+
+$$
+\frac{number\ of\ books\ with\ no\ reviews\ }{total\ books }
+$$
+
+>step3
+
+create the sampling distribution we'll do this by bootstrapping 
+_very important_ 
+when we create the sampling distribution 
+we _assume that it is true_
+
+>step4 
+
+compare our calculated statistic with the sampling distribution 
+
+if the calculated stat is far enough into the the tail of our normal 
+distribution , we call it significant 
+p_value 
+
+>step5
+
+if the p_value is < alpha we _reject_ H0 
+if the p_value is NOT < alpha we _do not reject_ H0 
+    didn't say we _accept_ the H0 
+    
+if the p_value is < alpha we _reject_ H0 
+   find evidence in support of our H1
+if the p_value is NOT < alpha we _do not reject_ H0 
+    didn't say we _accept_ the H0 
+    failed to find evidence in support of our H1
+
+
+```{r}
+book_tidy_prop <- books_tidy %>% 
+  mutate(has_reviews = text_reviews_count > 0)
+
+mean(book_tidy_prop$has_reviews)
+
+```
+point==point estimate just one value 
+type = draw just simple draw out of a bag 
+```{r}
+null_distribution_reviews<- book_tidy_prop %>%
+  specify(response = has_reviews, success = "FALSE") %>%
+  hypothesise(null = 'point', p = 0.07) %>% 
+  generate(reps = 1000, type = "draw") %>%
+  calculate(stat = "prop")
+```
+
+```{r}
+null_distribution_reviews %>% 
+  visualise(bins = 30)
+```
+```{r}
+observed_stats_prop <- book_tidy_prop %>% 
+  specify(response = has_reviews, success = 'FALSE') %>% 
+  calculate(stat = "prop")
+
+observed_stats_prop
+```
+```{r}
+null_distribution_reviews %>% 
+  visualise(bins = 30) +
+  shade_p_value(obs_stat = observed_stats_prop$stat, direction = 'both')
+  
+```
+
+```{r}
+p_value_prop <- null_distribution_reviews %>%
+  get_p_value(obs_stat = observed_stats_prop, direction = "both")
+
+p_value_prop
+```
+p is less than 0.05 reject H0 
+ we reject h0 and our prop is different 
+
+
+-------
+two sample 
+-independent 
+-paired 
+```{r}
+nice <- read_csv('data_3/nice.csv')
+algarve <- read_csv('data_3/algarve.csv')
+corfu <- read_csv('data_3/corfu.csv')
+florence <- read_csv('data_3/florence.csv')
+```
+
+independent means the observations are not assisated with each other 
+
+> niec flat lets higher than algarve 
+
+N0: the lets price are the same 
+N1: the lets price are different 
+
+N0: mu(mean let price nice) = mu(mean let price algarve)
+N0: mu(mean let price nice) != mu(mean let price algarve)
+
+```{r}
+apart_price <- bind_rows(nice = nice, 
+                         algarve = algarve,
+                         .id = 'location')
+
+apart_price
+```
+
+
+```{r}
+apart_price %>% 
+  filter(location == 'nice') %>% 
+  ggplot(aes(price))+
+  geom_histogram(col = "white", bins = 15)
+
+apart_price %>% 
+  filter(location == 'algarve') %>% 
+  ggplot(aes(price))+
+  geom_histogram(col = "white", bins = 15)
+
+apart_price %>% 
+  ggplot(aes(x = location, y = price))+
+  geom_boxplot(aes(col = location))+
+  geom_jitter(aes(col = location), alpha = 0.7)
+                 
+```
+y ~ x in specify 
+same as response = price explanatory = location 
+```{r}
+null_distribution <- apart_price %>% 
+  specify(price ~ location) %>% 
+  hypothesise(null = 'independence') %>% 
+  generate(rep = 1000, type = 'permute') %>% 
+  calculate(stat = "diff in means", order = c('algarve', 'nice'))
+
+null_distribution
+```
+```{r}
+observed_stats <- apart_price %>% 
+  specify(price ~ location) %>% 
+  calculate(stat = 'diff in means', order = c('algarve', 'nice'))
+
+observed_stats 
+```
+```{r}
+null_distribution %>% 
+  visualise()+
+  shade_p_value(obs_stat = observed_stats, direction = "right")
+```
+```{r}
+p_value <- null_distribution %>% 
+  get_p_value(obs_stat = observed_stats, direction = "right")
+```
+We have two more datasets for similar apartment lets in Corfu and Florence. Frame and perform an independent two-sample test to answer the following question:
+‘On average, is the price of 2-bedroom, 14-day holiday apartment lets in Florence significantly lower than that of comparable lets in Corfu?’
+Choose α and frame your hypotheses before you see the data
+_α_ = 0.05, 
+
+$$
+NO: \mu_{corfu\ price} = \mu_{florence\ price}\\
+N1: \mu_{corfu\ price} \neq \mu_{florence\ price}
+$$
+
+You will need to format your data in a combined, tidy dataset prior to performing the test
+```{r}
+apart_price_cf <- bind_rows(corfu = corfu, 
+                        florence = florence,
+                         .id = 'location')
+```
+
+
+```{r}
+null_distribution <- apart_price_cf %>% 
+  specify(price ~ location) %>% 
+  hypothesise(null = 'independence') %>% 
+  generate(rep = 1000, type = 'permute') %>% 
+  calculate(stat = "diff in means", order = c('corfu', 'florence'))
+
+null_distribution
+```
+```{r}
+observed_stats <- apart_price_cf %>% 
+  specify(price ~ location) %>% 
+  calculate(stat = 'diff in means', order = c('corfu', 'florence'))
+
+observed_stats 
+```
+```{r}
+null_distribution %>% 
+  visualise()+
+  shade_p_value(obs_stat = observed_stats, direction = "both")
+```
+
+```{r}
+p_value <- null_distribution %>% 
+  get_p_value(obs_stat = observed_stats, direction = "both")
+p_value
+```
+
+
+```{r}
+textbook <- read_csv('data_3/ucla_textbooks_f18.csv')
+```
+
+$$
+N0: \mu_{campus} = \mu_{amazon}\\
+N1: \mu_{campus} > \mu_{amazon}
+$$
+```{r}
+books_diff <- textbook %>%
+  mutate(diff_new = bookstore_new - amazon_new) %>%
+  filter(!is.na(diff_new))
+
+books_diff %>%
+  ggplot(aes(x = diff_new)) +
+  geom_histogram(col = 'white')
+```
+
+## Infer procedure
+1. Calculate the _observed_ statistic
+    i. Create _“flag”_ column if necessary
+    ii. Specify the _response_ variable
+    iii. Calculate the required _stat_
+e.g. prop / mean
+2. Generate the _null distribution_
+    i. Specify the _response_
+    ii. Indicate the _hypothesis_
+What type of hypothesis (e.g. point)
+Specify the proportion p (the observed stat)
+    iii. Generate the _null distribution_
+    iv. Calculate the _stat_ of interest
+3. _Visualize_ the resut
+Shade p-value region
+4. Extract the _p-value_
+```{r}
+null_distribution <- books_diff %>% 
+  specify(response = diff_new) %>% 
+  hypothesise(null = 'point', mu = 0 ) %>% 
+  generate(reps = 1000, type = 'bootstrap') %>% 
+  calculate(stat = 'mean')
+
+null_distribution
+```
+```{r}
+observed_stats <- books_diff %>% 
+specify(response = diff_new) %>% 
+   calculate(stat = 'mean')
+
+observed_stats
+```
+```{r}
+null_distribution %>% 
+  visualise()+
+  shade_p_value(obs_stat = observed_stats, direction = 'both')
+```
+```{r}
+null_distribution %>% 
+  get_p_value(obs_stat = observed_stats, direction = 'both')
+```
+our study suggests that the prices in the ucal book shop are signifcantly different from the price on Amazon on average (p = 0.048)
+
+
+
+
+‘On average, are the prices of used course texts lower on Amazon than at the campus bookstore?’
+```
+N0: diff_in_means = 0
+N1: diff_in_mean < 0 (amazon - campus book < 0 )
+```
+Hints:
+
+It will help to start with a clear definition: diff_used = bookstore_used - amazon_used or diff_used = amazon_used - bookstore_used
+This will be a one-tailed test, so frame your hypotheses appropriately.
+
+```{r}
+books_diff_used <- textbook %>%
+  mutate(diff_used =  amazon_used - bookstore_used) %>%
+  filter(!is.na(diff_used))
+
+books_diff_used %>%
+  ggplot(aes(x = diff_used)) +
+  geom_histogram(col = 'white')
+```
+
+```{r}
+null_distribution <- books_diff_used %>% 
+  specify(response = diff_used) %>% 
+  hypothesise(null = 'point', mu = 0 ) %>% 
+  generate(reps = 1000, type = 'bootstrap') %>% 
+  calculate(stat = 'mean')
+
+null_distribution
+```
+```{r}
+observed_stats <- books_diff_used %>% 
+specify(response = diff_used) %>% 
+   calculate(stat = 'mean')
+
+observed_stats
+```
+```{r}
+null_distribution %>% 
+  visualise()+
+  shade_p_value(obs_stat = observed_stats, direction = 'less')
+```
+```{r}
+null_distribution %>% 
+  get_p_value(obs_stat = observed_stats, direction = 'less')
+```
+we reject null, amazon is significantly lower for used textbooks 
+
+
+
+
