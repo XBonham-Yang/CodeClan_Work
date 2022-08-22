@@ -1,0 +1,160 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+What order does ISO standard follow? (e.g. year to second, second to year…)
+What is the minimum number of digits you can have in a year? Why is this?
+What clock system do the times use?
+How many time formats does ISO standard have?
+What timezone are time and dates automatically represented in?
+How are combined date-times represented?
+
+Answer
+1-Date and time values are ordered from the largest to smallest unit of time: year, month (or week), day, hour, minute, second, and fraction of second.
+
+2-ISO 8601 prescribes, as a minimum, a four-digit year [YYYY]. This is to make sure that, for example, the year the year 1945 isn’t confused with the year 2045.
+
+3-ISO 8601 uses the 24-hour clock system.
+
+4-Four. You can have - hh:mm:ss.sss , hh:mm:ss, hh:mm, hh
+
+5-Time zones are automatically represented in local time as UTC (coordinated universal time, GMT).
+
+6-You use the letter T as a delimiter, e.g. “2007-04-05T14:30”
+
+```{r}
+str(as.Date('2022-08-21'))
+unclass(as.Date('2022-01-01'))
+
+
+(38*365 + 12 *366)
+```
+posix = start at 1970-01-01 00:00:00
+
+```{r}
+date_time1 <- as.POSIXct('2020-01-01 00:00:00')
+date_time1
+unclass(date_time1)
+```
+```{r}
+date_time2 <- as.POSIXlt('2020-01-01 00:00:00')
+date_time2
+unclass(date_time2)
+```
+```{r}
+date_time2$mday
+```
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+```{r}
+netflix <- read_csv("data/netflix.csv")
+```
+col type on r as:
+Date : '<date>'
+time: '<time>'
+date-time : '<dttm>'
+
+```{r}
+'2019-01-19'
+class(ymd('2019-01-19'))
+```
+
+```{r}
+mdy('January 9th, 2019')
+```
+```{r}
+dmy('9-Jan-2019')
+```
+```{r}
+ymd_hms('2019-01-19 10:08:26')
+ymd_hm('2019-01-19 10:08')
+```
+```{r}
+ymd_h('2019-01-19 10')
+```
+```{r}
+netflix<- netflix %>% 
+  mutate(date_added = mdy(date_added))
+netflix
+```
+
+```{r}
+month(netflix$date_added[1:5], label = TRUE, abbr = FALSE)
+
+netflix <- netflix %>% 
+  mutate(day = day(date_added),
+         month = month(date_added,label = TRUE, abbr = FALSE),
+         year = year(date_added))
+netflix
+```
+
+```{r}
+netflix<- netflix %>% 
+  mutate(week_days = wday(date_added))
+```
+
+difftime: a dartetime obkect that represents days 
+period: represent  a timespan like week/ month/ day 
+duration : represent an exact number of seconds 
+
+```{r}
+netflix <- netflix %>% 
+  mutate(time_diff = today() - date_added)
+netflix
+```
+```{r}
+netflix <- netflix %>% 
+  mutate(time_period = as.period(today() - date_added),
+         time_years = as.numeric(time_period, 'years'),
+         time_hours = as.numeric(time_period, 'hours')
+         )
+netflix
+```
+```{r}
+netflix <- netflix %>% 
+  mutate(promo_date = date_added - weeks(2),
+         removal_date = date_added + months(4))
+
+netflix %>% 
+  select(date_added, promo_date, removal_date)
+```
+as period can do "weeks/years" 
+
+duration gives seconds 
+```{r}
+netflix <- netflix %>% 
+  mutate(time_duration = as.duration(today()-date_added))
+netflix %>% 
+  select(starts_with('time'))
+```
+```{r}
+ymd(20200110) + years(1)
+ymd(20200110) + dyears(1)
+```
+##understanding  timezone 
+
+```{r}
+Sys.timezone()
+```
+```{r}
+OlsonNames()
+#timezone names ^
+```
+
+```{r}
+ymd_hms('20230913 10:22:01', tz = "Atlantic/Faeroe")
+```
+```{r}
+ netflix %>%
+  mutate(date_tz_1 = force_tz(date_added, tzone = 'Asia/Singapore'),
+         date_tz_2 = with_tz(date_added, tzone = 'Asia/Singapore')) %>% 
+  select(date_added, date_tz_1, date_tz_2)
+```
+
+
+
+
+
