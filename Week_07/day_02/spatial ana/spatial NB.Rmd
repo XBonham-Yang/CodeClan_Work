@@ -1,0 +1,281 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Geospatial
+
+Region Name  simd  Geometry
+Falkirk        5     instruction(long_1, lat_1,...)
+Glasgow City   6     instruction(long_g1, lat_g1,...)
+
+Simple Features
+Each row in a spatial dataframe/tibble is a feature
+Similar to how we used a specifc package to work with time series data,
+we are going to use s specific packahe to work with geospatial data
+
+
+```{r}
+install.packages(c("sf", "rgeos","rnaturalearth", "rnaturalearthdata"))
+```
+```{r}
+library(sf)
+
+```
+
+simple feature 
+simple mean don't self intersect 
+
+```{r}
+
+north_carolina <- st_read(system.file("shape/nc.shp", package = "sf"))
+
+plot(north_carolina['AREA'])
+```
+```{r}
+nrow(north_carolina)
+```
+#100 features 
+
+```{r}
+names(north_carolina)
+```
+```{r}
+nc_geo <- st_geometry(north_carolina)
+```
+#how to draw the first feature 
+```{r}
+nc_geo[[1]]
+```
+
+The big seven (shapes that a feature can be)
+
+1.point(1 1)
+2.multipoint ((1 1), (2,2))
+3.line (1 1, 1 2)
+4.multi line ((1 1, 1 2), (2 2, 3 3))
+5.polygon (1 1, 1 2, 2 2, 2 1, 1 1)
+6.multi polygon ((1 1, 1 2, 2 2, 2 1, 1 1))
+7.geomtry collection (point( 1 1 ), mutiline((...)))
+
+geomtry collection can be made up of multiple shape instruction, 
+and any number of tem, just not a geometry collection
+
+shetland would be a multipolygon made up of several island polygon 
+
+```{r}
+plot(nc_geo[[1]])
+```
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+geom_sf
+
+```{r}
+ggplot(north_carolina)+
+  geom_sf(aes(fill = AREA), size = 0.1, colour = "black")+
+  theme_bw()
+```
+```{r}
+class(north_carolina)
+```
+
+```{r}
+ggplot(north_carolina)+
+  geom_sf(aes(fill = BIR79 ), size = 0.1, colour = "black")+
+  theme_bw()
+
+```
+```{r}
+ggplot(north_carolina)+
+  geom_sf()+
+  geom_sf(data = north_carolina %>% filter(AREA == max(AREA)), fill = "red")
+```
+
+tsibble --> as_tibble --> tibble
+sf df --> st_drop_geometry --> df(tibble)
+
+```{r}
+north_carolina %>% 
+  st_drop_geometry()
+```
+this is about thw world
+
+##subsetting simple feature 
+
+```{r}
+library(rnaturalearth)
+library(rnaturalearthdata)
+```
+
+```{r}
+world<- ne_countries(scale = "medium",returnclass = "sf")
+```
+241 features of 64 variable 
+
+```{r}
+world %>% 
+  st_drop_geometry() %>% 
+  head()
+```
+```{r}
+ggplot(world) +
+  geom_sf(aes(fill = pop_est), size = 0.1)+
+  scale_fill_viridis_c(trans = "sqrt")
+  
+```
+one thing we can do to "better" visualise the different populations 
+between countries is  ...> apply a transformation 
+
+(indian and chian still most popu countires, but because we reduce how much more populated they are in )
+
+```{r}
+ggplot(world) +
+  geom_sf(aes(fill = gdp_md_est), size = 0.1)+
+  scale_fill_viridis_c(trans = "sqrt")
+```
+picking out individual coutries 
+
+```{r}
+world %>% 
+  filter(name =="Italy") %>% 
+  ggplot()+
+  geom_sf()
+```
+zooming in 
+
+```{r}
+world %>% 
+  ggplot() + 
+  geom_sf(aes(fill = economy), size = 0.1) +
+  coord_sf(xlim = c(-102.15, -74.12), ylim = c(7.65, 33.9), expand = FALSE)+
+  geom_sf_text(aes(label = name), size = 2, check_overlap = TRUE)+
+  scale_fill_brewer(palette = "Dark2") +
+  ggtitle("Economic Rating") +
+  theme(legend.position = "bottom")
+```
+creating interactive geospatial data visulisation 
+```{r}
+library(leaflet)
+```
+
+```{r}
+
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(
+    lng = 174.768, lat = -36.852, popup = "Birthplace of R"
+  )
+```
+
+circle markers
+```{r}
+library(jsonlite)
+
+data_url <- "https://data.colorado.gov/resource/j5pc-4t32.json?&county=BOULDER"
+
+water_data <- fromJSON(data_url) %>% 
+  jsonlite::flatten(recursive = TRUE)
+```
+data prep 
+amount, latitude and longtitude are not numeric but they should be
+
+```{r}
+water_data_clean<-water_data %>% 
+  mutate(across(
+    c(amount, location.latitude, location.longitude),
+    as.numeric
+  )) %>% 
+  filter(!is.na(location.latitude))
+```
+```{r}
+leaflet(water_data_clean) %>% 
+  addTiles() %>% 
+  addCircles(
+    lng = ~location.longitude,
+    lat = ~location.latitude,
+    radius = ~amount/10,
+    #size depend on water amount 
+    popup = ~paste("water:", amount, sep = " ")
+    #paste create a string 
+  )
+```
+
+```{r}
+leaflet(water_data_clean) %>% 
+  addTiles() %>% 
+  addMarkers(
+    lng = ~location.longitude,
+    lat = ~location.latitude,
+    popup = ~paste("water:", amount, sep = " "),
+    clusterOptions = markerClusterOptions()
+  )
+```
+```{r}
+plot(north_carolina['AREA'])
+```
+```{r}
+plot(nc_geo[[4]])
+```
+```{r}
+plot(st_simplify(nc_geo, dTolerance = 2500)[[4]])
+```
+simlpify increasing tolerance will decrease the number of points 
+
+by simlifying we can reduce computational runtime 
+
+```{r}
+north_carolina %>% 
+  st_simplify(dTolerance = 2000) %>% 
+  ggplot()+
+  geom_sf()+
+  theme_void()
+```
+
+reading/writing shapefiles 
+
+```{r}
+#not standerd to read in a system file, mostly for example
+st_read(system_file())
+```
+
+```{r}
+north_carolina %>% 
+  st_simplify(dTolerance = 2000) %>% 
+  st_write(dsn = "nc_simp", layer = "simp_nc", driver = "ESRI Shapefile")
+```
+read in 
+```{r}
+nc_simp <- st_read(dsn = "nc_simp/",
+                   layer = "simp_nc")
+nc_simp
+```
+
+```{r}
+pal <- colorBin("Purples", nc_simp$BIR74, n =5)
+labels <- paste0("<b>",nc_simp$NAME,"<b>", "<br>", nc_simp$BIR74) %>% lapply(hymltools::HTML)
+
+leaflet(nc_simp) %>% 
+  addTiles() %>% 
+  addPolygons(weight = 1, color = "black", fillColor = ~pal(BIR74),
+fillOpacity = 100,
+label = labels)
+```
+```{r}
+
+```
+
+
+%>% addLegend(pal = pal,
+values = ~BIR74
+colours  = ~pal(BIR74),
+position = "bottomright"
+)
+
+
+
+
+
+
+
+
