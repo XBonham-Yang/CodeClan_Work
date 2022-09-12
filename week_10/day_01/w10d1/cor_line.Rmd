@@ -1,0 +1,170 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+mtcars %>%
+  ggplot(aes(x = wt, y = mpg)) +
+  geom_point() +
+  geom_point(aes(x = mean(wt), y = mean(mpg)), col = "red", size = 5)
+```
+```{r}
+noisy_bivariate <- function(noise = 1, gradient = 1){
+  x <- runif(n = 200, min = 0, max = 10)
+  y <- gradient * x + 10
+  y_scatter <- noise * 4 * rnorm(n = 200)
+  y <- y + y_scatter
+  data = tibble(x, y)
+
+  r <- round(cor(x, y), 4)
+  title <- paste(
+    "noise = ", noise,
+    ", gradient = ", gradient,
+    ", r = ", r
+  )
+  
+  data %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point() +
+    xlim(0, 10) +
+    ylim(min(c(min(y), 0)), max(c(max(y), 10))) +
+    ggtitle(title)
+  
+}
+noisy_bivariate(noise = 0.3, gradient = 1)
+```
+
+noise	gradient
+0	              1
+0	              0.2
+0.3	              0.2
+0.3	              1
+1	              1
+1	              0
+0	             -1
+0.3	             -1
+1	             -1
+```{r}
+mtcars %>% 
+  summarise(cor(mpg,wt))
+```
+```{r}
+# Pivot longer:
+anscombe_long <- anscombe %>%
+pivot_longer(everything(),
+names_to = c(".value", "set"),
+names_pattern = c("(\\D+)(\\d+)"))
+
+# Group by set and get the correlation coefficient for each:
+anscombe_long %>%
+group_by(set) %>%
+summarise(r = cor(x, y))
+
+# Plot the quartet:
+anscombe_long %>%
+ggplot() +
+aes(x = x, y = y) +
+geom_point() +
+facet_wrap(~set)
+```
+
+```{r}
+anscombe_long %>%
+group_by(set) %>%
+summarise(r = cor(x, y))
+```
+
+Task - 15 mins Let’s calculate correlation coefficients for various variables in the state.x77 dataset!
+Examine the contents of this dataset (try accessing documentation via ?state.x77 or running summary() on it).
+Choose a few combinations of variables to plot as y
+y versus x
+x and calculate the correlation coefficients for the same combinations. Do you find any strong correlations?
+Have a think about what kind of evidence you would need to be able to claim that any of the correlations you find are due to a causal relationship between the variables.
+[Hint the dataset is a matrix so convert it to a tibble first via tibble_states <- clean_names(as_tibble(state.x77)) to make manipulations easier].
+```{r}
+tibble_states <- clean_names(as_tibble(state.x77))
+tibble_states
+```
+```{r}
+tibble_states %>% 
+  #group_by(population) %>% 
+  summarise(r = cor(population, frost))
+```
+```{r}
+line <-function(x,a,b){
+  return(a*x +b )
+}
+
+data <- tibble(
+  x = seq (-5, 5,0.1),
+  y = line(x, a = 2, b = -1)
+)
+
+data %>% 
+  ggplot(aes(x, y))+
+  geom_line(col = "firebrick")+
+  geom_vline(xintercept = 0)+
+  geom_hline(yintercept = 0)
+```
+
+Play around plotting two or three different lines.
+Try a line with a=0
+a=0 and positive b.
+You can use mutate() to overwrite y in data from above
+Can we use our line() function to plot a perfectly vertical line?
+
+```{r}
+data <- tibble(
+  x = seq (-5, 5,0.1),
+  y = line(x, a = 1, b = -1)
+)
+
+data %>% 
+  ggplot(aes(x, y))+
+  geom_line(col = "firebrick")+
+  geom_vline(xintercept = 0)+
+  geom_hline(yintercept = 0)
+```
+```{r}
+noisy_line <- read_csv("data_3/noisy_line.csv")
+
+noisy_line_plot <- noisy_line %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+noisy_line_plot
+```
+```{r}
+centroid <- noisy_line %>%
+  summarise(
+    x = mean(x),
+    y = mean(y)
+  )
+centroid
+```
+```{r}
+noisy_line_plot <- noisy_line_plot +
+  geom_point(aes(x = centroid$x, y = centroid$y), col = "red", size = 5)
+noisy_line_plot
+```
+```{r}
+get_intercept <- function (slope, centroid_x, centroid_y){
+  return(centroid_y - slope* centroid_x)
+}
+```
+
+```{r}
+slope = 2.2
+noisy_line_plot + 
+  geom_abline(slope = slope, intercept = get_intercept(slope, centroid$x, centroid$y))
+```
+geom_smooth(method = "lm", se = FALSE)
+```{r}
+
+```
+

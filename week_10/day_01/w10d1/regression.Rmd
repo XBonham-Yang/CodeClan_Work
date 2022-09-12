@@ -1,0 +1,218 @@
+---
+title: "regression"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+height <- c(176, 164, 181, 168, 195, 185, 166, 180, 188, 174)
+weight <- c(82, 65, 85, 76, 90, 92, 68, 83, 94, 74 )
+```
+
+```{r}
+sample <- tibble (
+  weight, height
+)
+```
+
+```{r}
+sample %>% 
+  ggplot(aes(x = weight, y = height))+
+  geom_point()
+```
+```{r}
+b0 <- 95
+b1 <- 1
+
+line <- function(x, b0, b1){
+  return(b0 + x * b1)
+}
+```
+
+```{r}
+sample <- sample %>% 
+  mutate(fitted_height = line(weight,b0, b1))
+
+sample %>% 
+  ggplot(aes(x = weight, y = height))+
+  geom_point()+
+  geom_point(aes(y = fitted_height), shape = 1)+
+  geom_abline(slope = b1, intercept = b0, col = "red")+
+  geom_segment(aes(xend = weight, yend = fitted_height), alpha = 0.5)
+```
+the small error bar is 
+A residual is the difference between a fitted outcome value and an actual outcome value.
+
+```{r}
+sample <- sample %>% 
+  mutate(residual = height - fitted_height)
+sample
+```
+```{r}
+sample %>% 
+  summarise(sum_residuals = sum(residual))
+
+```
+```{r}
+sample %>% 
+  mutate(sq_resid = residual ^2 ) %>% 
+  summarise(sum_sq_resid = sum(sq_resid))
+
+```
+```{r}
+model <- lm(formula = height ~ weight, data = sample)
+model
+```
+
+```{r}
+new_model <- lm(formula = sample$height ~ sample$weight)
+new_model
+```
+
+```{r}
+fitted(model)
+```
+
+```{r}
+model %>% 
+  predict(newdata = data.frame(weight = c(78)))
+```
+```{r}
+sample <- sample %>% 
+  select(-c(fitted_height, residual, sq_resid)) %>% 
+  add_predictions(model) %>% 
+  add_residuals(model)
+sample
+```
+```{r}
+sample %>% 
+  ggplot(aes(x = weight))+
+  geom_point(aes(y = height))+
+  geom_line(aes(y = pred), col = "red")
+```
+```{r}
+weights_predict <- tibble (
+  weight = 50:120
+)
+
+weights_predict %>% 
+  add_predictions(model)
+```
+```{r}
+height <- c(176, 164, 181, 168, 195, 185, 166, 180, 188, 174)
+weight <- c(82, 65, 85, 76, 90, 92, 68, 83, 94, 74 )
+sample <- tibble(
+  weight,
+  height
+)
+```
+
+
+```{r}
+model <- lm(height ~ weight,
+            data = sample)
+```
+
+```{r}
+summary(model)
+
+```
+
+```{r}
+model %>% tidy()
+```
+```{r}
+glance_output <- model %>% 
+  glance() %>% 
+  janitor::clean_names()
+
+glance_output
+```
+```{r}
+tidy_output <- model %>% tidy() %>% 
+  janitor::clean_names()
+tidy_output
+```
+
+```{r}
+glance_output$r_squared
+```
+```{r}
+sample %>% 
+  summarise(r = cor(height ,weight)^2)
+```
+```{r}
+library(ggfortify)
+autoplot(model)
+
+```
+```{r}
+sample %>% add_residuals(model) %>% 
+  ggplot(aes(x = resid))+
+  geom_histogram(binwidth = 2)
+```
+ distribution_1.csv and distribution_2.csv. Fitting  linear regression to each of these distributions leads to problems with the residuals for two different reasons. See if you can identify the problem in each case!
+
+Load the data set.
+Fit a simple linear regression taking y as the outcome and x as the explanatory variable, saving the model object.
+Check the diagnostic plots for the model object and identify the main problem you see with the residuals (use the autoplot() function).
+Finally, plot the data and overlay the best fit line (use add_predictions() to add a pred column to the data set, and then plot via geom_point() and geom_line()). Does this plot help you interpret the problem you found in the residuals?
+
+```{r}
+d1 <- read_csv("data_5/distribution_1.csv")
+d2 <- read_csv("data_5/distribution_2.csv")
+```
+
+```{r}
+model1 <- lm(y ~ x,
+            data = d1)
+model2 <- lm(y ~ x,
+            data = d2)
+```
+
+```{r}
+autoplot(model1)
+```
+
+```{r}
+autoplot(model2)
+```
+
+```{r}
+ d1 <- d1 %>% 
+  add_predictions(model1) 
+d1%>% 
+  ggplot(aes(x=x))+
+  geom_point(aes(y=y))+
+  geom_line(aes(y = pred), col = "red")
+
+```
+```{r}
+d2 %>% 
+  add_predictions(model2) %>% 
+  ggplot(aes(x=x))+
+  geom_point(aes(y=y))+
+  geom_line(aes(y = pred), col = "red")
+```
+```{r}
+library(infer)
+
+bootstrap_distribution_slope <- d2 %>%
+  specify(formula = y ~ x) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "slope")
+
+slope_ci95 <- bootstrap_distribution_slope %>%
+  get_ci(level = 0.95, type = "percentile")
+slope_ci95
+```
+
+```{r}
+bootstrap_distribution_slope %>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = slope_ci95)
+```
+```{r}
+janitor::clean_names(tidy(model2, conf.int = TRUE, conf.level = 0.95))
+```
+
