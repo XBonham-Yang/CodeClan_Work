@@ -1,0 +1,380 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(modelr)
+library(caret)
+library(tidyverse)
+```
+
+```{r}
+saving <- CodeClanData::savings
+saving
+```
+
+data  = pattern + noise 
+
+we are interested in patterns 
+
+
+```{r}
+mod_over <- lm(savings ~ ., saving)
+```
+
+
+```{r}
+plot(mod_over)
+```
+```{r}
+summary(mod_over)
+```
+
+```{r}
+mod_well <- lm(savings ~ salary + age + retired, saving)
+```
+
+```{r}
+plot(mod_well)
+```
+```{r}
+summary(mod_well)
+```
+
+```{r}
+mod_under <- lm(savings ~ salary, saving)
+plot(mod_under)
+summary(mod_under)
+```
+## parsimony 
+goodness of fit 
+
+r2 adj_r2 
+
+AIC Akaike information criterion 
+BIC Baysian info crit 
+
+likelihood 
+
+not really gof measure 
+really they are _relative_ gof measures 
+
+used for comparing models 
+
+BIC penalises more strongly 
+
+R2 LARGER BETTER 
+abic Smaller is better 
+
+
+
+```{r}
+summary(mod_over)$adj.r.squared
+summary(mod_well)$adj.r.squared
+summary(mod_under)$adj.r.squared
+```
+
+```{r}
+AIC(mod_over)
+AIC(mod_well)
+AIC(mod_under)
+```
+
+
+```{r}
+BIC(mod_over)
+BIC(mod_well)
+BIC(mod_under)
+```
+
+```{r}
+summary(mod_over)
+broom::glance(mod_over)
+broom::tidy(mod_over)
+```
+test/train sets
+BIC tends to produce smaller models 
+split data before we look at it 
+- ok to go though basic cleaning steps 
+
+
+
+create a test set used to test the model on unseen data 
+separate from the training set 
+don' refer to it ever again until the model is built 
+
+the remaining data is our training data 
+we ant to use as much of the data as possible 
+
+90/10 - 90 training 10 for testing 
+
+
+```{r}
+set.seed(9)
+
+n_data <- nrow(saving)
+
+test_index <- sample(1: n_data, size = n_data * 0.2)
+
+test <- slice(saving, test_index)
+
+train <- slice(saving, -test_index)
+```
+
+
+
+fit a model to the training set 
+
+```{r}
+mod <- lm(savings ~ salary + age + retired, train)
+library(ggfortify)
+autoplot(mod)
+```
+
+```{r}
+predictions_test <- test %>% 
+  add_predictions(mod) %>% 
+  select(savings, pred)
+
+predictions_test
+```
+
+```{r}
+mse_test <- mean((predictions_test$pred - test$savings)^2)
+mse_test
+#normally will be rooted  -> rmse
+
+sqrt(mse_test)
+```
+
+Calculate the mean squared error between predicted savings and actual savings in the training dataset.
+
+Which is higher, the error on the test or the error on the training data? Is this what you would expect?
+
+
+```{r}
+predictions_train <- train %>% 
+  add_predictions(mod) %>% 
+  select(savings, pred)
+
+predictions_test
+mse_train <- mean((predictions_train$pred - train$savings)^2)
+mse_train
+sqrt(mse_train)
+```
+k-fold validation 
+
+bias - variance trade off 
+
+Hyperparmaters 
+```{r}
+cv_10_fold <- trainControl(method = 'cv',
+                           number = 10,
+                           savePredictions = TRUE)
+
+model <- train(savings ~ salary + age + retired, data = saving,
+               trControl = cv_10_fold,
+               method = 'lm')
+model
+
+```
+
+```{r}
+model$pred
+```
+```{r}
+model $resample
+```
+```{r}
+mean(model$resample$RMSE)
+```
+#ROOT MEAN SQ ERROR 
+Find the average error and the average r-squared value across each fold, after doing a 10-fold cross validation using the model which has all the variables in it. What does this tell you? Are these values as expected?
+
+
+```{r}
+cv_10_fold <- trainControl(method = "cv", 
+                           number = 10, 
+                           savePredictions = TRUE)
+
+model <- train(savings ~ .,
+               data = saving,
+               trControl = cv_10_fold,
+               method = 'lm')
+
+mean(model$resample$RMSE)
+
+mean(model$resample$Rsquared)
+```
+
+data 
+some model --- lots of different types of model 
+hyperparams - "model setttings"
+fit several model with varying hyperarams 
+use the validation set to choose our hyperparams 
+re-train model on entrie train set (60 + 20)
+test on the test set 
+
+
+## avoiding leaks 
+ if you inpute before you split 
+ realise the imputed values in the set has been influence by the training set
+ 
+ 
+ clean 
+ explor(minimally)
+ split
+ training set ---imputattion train validate 
+ test set ---- imputation 
+
+
+```{r}
+insurance <- CodeClanData::insurance
+```
+
+
+
+```{r}
+install.packages("glmutli")
+```
+
+
+```{r}
+library(glmulti)
+library(leaps)
+```
+
+start with a NULL model 
+ - intercept only 
+at each step check all predictors 
+
+
+## leaps package limitation 
+
+-it will happily include only some level of a cat variable 
+- doesn't handle interaction very well 
+
+```{r}
+
+insurance
+```
+
+```{r}
+regsubsets_forward <- regsubsets(charges ~.,
+                                 data = insurance,
+                                 nvmax = 8,
+                                 method = 'forward')
+```
+
+```{r}
+sum_regsubsets_forward <- summary(regsubsets_forward)
+sum_regsubsets_forward
+```
+
+```{r}
+sum_regsubsets_forward$which
+```
+
+```{r}
+plot(regsubsets_forward, scale = "adjr2")
+```
+```{r}
+plot(regsubsets_forward, scale = "bic")
+```
+
+```{r}
+plot(sum_regsubsets_forward$rsq, type = "o", pch = 20)
+```
+```{r}
+plot(sum_regsubsets_forward$bic, type = "b")
+```
+
+```{r}
+regsubsets_backward <- regsubsets(charges ~ ., data = insurance, nvmax = 8, method = "backward")
+regsubsets_exhaustive <- regsubsets(charges ~ ., data = insurance, nvmax = 8, method = "exhaustive")
+
+
+plot(regsubsets_forward, scale = "adjr2")
+plot(regsubsets_backward, scale = "adjr2")
+
+plot(regsubsets_exhaustive, scale = "adjr2")
+```
+
+
+```{r}
+summary(regsubsets_exhaustive)$which[6,]
+```
+
+```{r}
+mod_without_region <- lm(charges ~age +bmi + children + smoker, insurance)
+```
+
+```{r}
+summary(mod_without_region)
+```
+
+```{r}
+mod_with_region <- lm(charges ~age +bmi + children + smoker + region, insurance)
+summary(mod_with_region)
+```
+
+```{r}
+anova(mod_without_region, mod_with_region)
+```
+
+
+```{r}
+insurance <- insurance %>% 
+  mutate(location = substr(region, 1,5))
+```
+
+
+```{r}
+mod_with_region_2 <- lm(charges ~age +bmi + children + smoker + location, insurance)
+summary(mod_with_region_2)
+```
+
+
+```{r}
+anova(mod_without_region, mod_with_region_2)
+```
+
+```{r}
+autoplot(mod_without_region)
+```
+
+
+
+```{r}
+autoplot(mod_with_region)
+```
+
+```{r}
+autoplot(mod_with_region_2)
+```
+
+```{r}
+summary(regsubsets_exhaustive)$which[4,]
+```
+```{r}
+mod_4 <- lm(charges ~age +bmi + children + smoker, insurance)
+```
+
+
+```{r}
+summary(mod_4)
+autoplot(mod_4)
+```
+
+
+
+
+
+
+
+
+
+
+
+
