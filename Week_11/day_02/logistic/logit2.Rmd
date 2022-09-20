@@ -1,0 +1,195 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(modelr)
+library(janitor)
+```
+
+```{r}
+mortgage <- read_csv("data/mortgage_applications.csv") %>% janitor::clean_names()
+```
+```{r}
+mortgage_glm <- glm(
+  accepted ~ tu_score +employed + age,
+  family = binomial(link = 'logit'),
+  data = mortgage
+)
+
+# used our model as a binary classify 
+
+mortgage_pred <- mortgage %>% 
+  add_predictions(model = mortgage_glm, type = 'response')
+
+
+head(mortgage_pred)
+```
+recap os terms 
+that TRUE positive rate: (proportion of actual positive cases that are correctly 
+identified by the classifier) 
+
+
+
+FALSE positive rate: (false alarms the proportion of actual negative cases that are misclassified)
+
+
+
+effectiveness of our classifier 
+TPR vs FPR
+
+there is ROC curves (reciver operator chaacteristic)
+```{r}
+library(pROC)
+```
+
+```{r}
+roc_obj <- mortgage_pred %>% 
+  roc(response = accepted, predictor = pred)
+
+ggroc(data = roc_obj, legacy.axes = TRUE)+
+  labs(x = "FPR", y = "TPR")
+```
+Why are classifiers with ROC curves closer to the top-left corner said to be more effective?
+
+```
+have a lower FPR? 
+The ‘perfect classifier’ would have a TPR of 1.0 and an FPR of 0.0. This corresponds to the top-left point on the chart! It’s possible for a classifier to have a curve ‘below’ the diagonal, in which case, it performs more poorly than random guessing. Quite an achievement!
+```
+
+Which end of the curves corresponds to low threshold probability, and which to high?
+
+```
+The upper right corner of the curves corresponds to low threshold probability (i.e. ’classify everything as positive). The lower left corner therefore corresponds to high threshold probability.
+```
+Way to remember, as we decrease the threshould at which we classify, we increase the 
+rate of false positive(of incorrectly accepting people for loans)
+
+other useful bites 
+```{r}
+tibble(threshold = roc_obj$thresholds,
+       true_positive_rate = roc_obj$sensitivities,
+       false_positive_rate = roc_obj$specificities)
+```
+
+
+`Fit a single predictor logistic regression model to the mortgage_data. We recommend tu_score as the predictor. Save the model as mortgage_1pred_model
+
+`Add the predicted probabilities from this model to mortgage_data, and save the resulting data as mortgage_data_with_1pred
+
+`Use this data to generate an an object from roc(), save the object as roc_obj_1pred
+
+`Pass your old roc_obj_3pred and new roc_obj_1pred into ggroc() [Hint check the ggroc() docs to see how to pass in multiple roc objects].
+
+`Given these ROC curves, which classifier is better?
+
+`If you have time, try another single predictor, i.e. age or employed
+
+```{r}
+model_1pred <- glm(accepted ~ tu_score, data = mortgage, family = binomial(link = 'logit'))
+
+mortgage_1pred <- mortgage %>%
+  add_predictions(model_1pred, type = "response")
+
+roc_obj_1pred <- mortgage_1pred %>%
+  roc(response = accepted, predictor = pred)
+
+roc_curve <- ggroc(data = list(pred3 = roc_obj, pred1 = roc_obj_1pred), legacy.axes = TRUE) +
+  coord_fixed()
+
+roc_curve
+```
+-AUC (area under curve)
+ROC curver closer to (0,1) will have a larger space under the line
+-Gini 
+```{r}
+auc(roc_obj)
+```
+
+```{r}
+auc(roc_obj_1pred)
+```
+
+3 terms has higher area so better 
+
+a singer number value to express how good of a classifier your model is 
+
+gini = how good too 
+
+Gini = 2 AUC - 1 
+Gini will be beween [-1, 1]
+0 is a crappy classifier 
+
+
+```{r}
+gini3 = 2 *0.881 -1 
+gini1 = 2*0.8666 -1 
+gini3
+gini1
+```
+
+cross validation 
+-splitting data before building a model into test and train 
+model is trained on training data 
+tested on testing data 
+
+K-folds (k = 5, 5-folds)
+split data into 5 folds 
+
+taking 1/5 as testing, train the model with the remaining 4/5 ths of the data 
+
+```{r}
+library(caret)
+```
+```{r}
+mortgage <- mortgage %>%
+  mutate(employed = as_factor(if_else(employed, "t", "f")),
+         accepted = as_factor(if_else(accepted, "t", "f")),
+         employed = relevel(employed, ref = "f"),
+         accepted = relevel(accepted, ref = "f")) 
+```
+
+caret needs factor data instead of logical 
+
+```{r}
+train_control <- trainControl(method = "repeatedcv", 
+                              number = 5,
+                              repeats = 100,
+                              savePredictions = TRUE, 
+                              classProbs = TRUE, 
+                              summaryFunction = twoClassSummary)
+```
+
+```{r}
+model <- train(accepted ~ tu_score + employed + age,
+               data = mortgage,
+               trControl = train_control,
+               method = "glm",
+               family = binomial(link = 'logit'))
+```
+
+```{r}
+summary(model)
+model$results
+```
+
+sens = sensitivity
+spec = specificity 
+roc = area under roc 
+
+0.886 AUC 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

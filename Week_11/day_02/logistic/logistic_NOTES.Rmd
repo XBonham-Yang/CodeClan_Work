@@ -1,0 +1,310 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+```{r}
+logistic_model <- glm(pass ~ time_spent_studying, family = binomial(), student_results)
+
+student_results <- tibble(
+  time_spent_studying = c(1.5, 1, 2.2, 1.2, 4.6, 5.0, 2.6, 2.5, 4, 3.2, 0.5, 0.8, 1.8, 4.5, 3.8, 2.8, 4.2, 3, 3.5, 0.2),
+  pass = c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE)
+)
+
+ggplot(student_results, aes(time_spent_studying, pass)) +
+  geom_point()
+```
+why doesn't l reg work ?
+
+can predict outside of the range 
+High error 
+
+instead a fit we might want would 
+
+predict a prob of pass/fail (always be between 0 and 1 )
+would closely align with data points 
+
+
+- How do we do this? 
+
+we need to talk about odds 
+
+odd is a ratio of success : failure 
+
+odds of tossing a coin and getting a head 
+1 success (head)
+1 failure (tail)
+1:1 
+
+
+
+
+1:5 
+
+used as classification technique (binary)
+```{r}
+mortgage <- read_csv('data/mortgage_applications.csv') %>% janitor::clean_names()
+```
+```{r}
+mortgage
+```
+```{r}
+mortgage %>% 
+  ggplot(aes(y = accepted, x = tu_score))+
+  geom_boxplot()+
+  geom_jitter(alpha = 0.2)
+```
+a glossary of terms 
+probability = p_1/p_all
+odds = p_1/p_not_1
+odds ratio 
+ln/log 
+log odds = log of the odds eg.log(0.2)
+link function 
+logit 
+odds factor 
+
+```{r}
+logit <- function(x){
+  return(log(x/(1-x)))
+}
+
+logit_data <- tibble(p = seq(0.001, 0.999, 0.001)) %>% 
+  mutate(logit_p = logit(p))
+
+head(logit_data)
+```
+```{r}
+logit_data %>% 
+  ggplot(aes(x = logit_p, y = p))+
+  geom_line()+
+  labs( x = "logit(p) value",
+        y = "prob")
+```
+
+```{r}
+library(janitor)
+library(modelr)
+```
+
+```{r}
+mod_md <- glm(accepted ~ tu_score, data = mortgage,
+              family = binomial(link = 'logit'))
+
+summary(mod_md)
+```
+
+```{r}
+# 0 to 710 are thr options for credit score
+
+#map a prediction of accepted or not for each credit score 
+log_pred <- tibble(
+  tu_score = seq(0, 710, 1)
+) %>% 
+  add_predictions(model = mod_md, type = 'response')
+
+ggplot(mod_md)+
+  geom_jitter(aes(x = tu_score, y = as.numeric(accepted)), alpha = 0.5,  position = position_jitter(h = 0.03))+
+  geom_line(data = log_pred, aes(x = tu_score, y = pred), col = 'red')+
+  labs(y = 'estimated p(accepted)')
+```
+
+```{r}
+# can use our predictions by filtering 
+log_pred %>% 
+  filter(tu_score == 600)
+```
+
+how do our odds of getting accepted for a mortage change as we increase tu_score?
+
+
+odda at a baseline level (tu_score = 594)
+odds at a bit above the baseline level 
+
+how does increasing our tu_score by 50 affect our data 
+
+```{r}
+odds_change <- function(b1, change){
+  exp(b1 * change)
+}
+
+odds_change(0.008475, 50)
+```
+
+a 50 unit increase in tu_score, increase our odds by a 
+factor of 1.53
+
+next is categorical predictor
+
+
+```{r}
+mod_2 <- glm(
+  accepted ~ tu_score + employed,
+  family = binomial(link = 'logit'),
+  data = mortgage
+)
+```
+
+```{r}
+log_pred <- tibble(
+  tu_score = rep(seq(0, 710, 1),2),
+  employed = c(rep(TRUE, 711), rep(FALSE, 711))
+) %>% 
+  add_predictions(model = mod_2, type = 'response')
+
+ggplot(mod_md)+
+  geom_jitter(aes(x = tu_score, y = as.numeric(accepted)), alpha = 0.5,  position = position_jitter(h = 0.03))+
+  geom_line(data = log_pred, aes(x = tu_score, y = pred, col = employed))+
+  labs(y = 'estimated p(accepted)')
+```
+```{r}
+log_pred %>% 
+  filter(tu_score == 600)
+```
+
+interpretation of categorical predictors:
+
+odds(employed = true)/ odds(employed = false) = odds ratio 
+
+```{r}
+odds_change(1.48,1)
+```
+
+on average, a customer's odds of being accepted for a 
+mortgage are 4.39 
+
+# model performance : building a binary classifier 
+
+rather than know the equation of a squiggle and how increasing/decreasing your credit score/ employment affected the probability you'd be accepted for a mortgage 
+
+a model that assigns a class based on the predicted probability 
+
+if applicant approaches our bank asking for a mortgage, if their credit score is X and their employment is Y, will we accept them for a loan or not 
+
+the probability level at which we assign yes or no is called the threshold 
+so for a 0.6 threshold, if the predicted probability of being accepted is greater than 0.6 ---> accepted 
+
+```{r}
+mortgage_pred <- mortgage%>% 
+  # add our predicted probability from the log model 
+  add_predictions(mod_2, type = 'response') %>% 
+  mutate(predict_accepted = pred >= 0.6)
+```
+
+model assessment - how often did we get it right 
+1 quick assessment tool: The Confusion Matrix 
+```{r}
+mortgage_pred %>% tabyl(accepted, predict_accepted)
+```
+accepted is the y axis 
+Task - 5 mins - Preparation
+
+Load and clean the names of mortgage_applications.csv.
+Re-run the logistic regression on the dataset, again treating the tu_score, age and employed variables as predictors and the accepted variable as the binary dependent.
+
+Keep the model object (call it mortgage_3pred_model) and use it to predict estimated probabilities for the sample data using add_predictions() (call this mortage_data_with_3pred)
+Look as the head() of the data with predicted probabilities.
+
+
+```{r}
+mod_3 <- glm(
+  accepted ~ tu_score + employed + age,
+  family = binomial(link = 'logit'),
+  data = mortgage
+)
+```
+
+```{r}
+mortgage_pred_3 <- mortgage%>% 
+  # add our predicted probability from the log model 
+  add_predictions(mod_3, type = 'response') %>% 
+  mutate(predict_accepted = pred >= 0.6)
+head(mortgage_pred_3)
+summary(mortgage_pred_3)
+```
+
+```{r}
+mortgage_pred_3 %>% tabyl(accepted, predict_accepted)
+```
+
+Extract the rows in mortgage_data with tu_score = 594. Compare the sample data outcomes with the predicted outcomes of the threshold 0.6 classifier and say which of the following four groups each outcome belongs to: 
+(i) true positive, (ii) true negative, (iii) false positive or (iv) false negative.
+
+```{r}
+ mortgage%>% 
+  add_predictions(mod_3, type = 'response') %>% 
+  mutate(predict_accepted = pred >= 0.6) %>% 
+  filter(tu_score == 594)
+#two false positive 
+#three true positive 
+```
+what measure of accurancy do we have how do we boil this down into a single value of accuracy 
+
+accuracy = nTP + nTN / N 
+(times we are right)/ row
+
+we were correct 85.8 % of the time 
+the bad news is that accuracy has a subtle weakness 
+
+consider this case:
+we run a test at the end of the school year for 1000 students. 
+900 students pass the test 100 students do not pass 
+
+what accuracy would my always pass model get 
+
+weakness is's reaction to unbalanced data 
+
+this is why we've got other performance measures 
+-accuracy 
+-rate (true positive rate, specificity)
+-auc
+-gini 
+
+TP Sensitivity rate 
+TN rate 
+T_neg/all negative 
+Specificity (true negative rate) refers to the probability of a negative test, conditioned on truly being negative.
+
+```{r}
+ mortgage%>% 
+  add_predictions(mod_3, type = 'response') %>% 
+  mutate(predict_accepted = pred >= 0.6) %>% 
+  filter(predict_accepted == FALSE)
+```
+
+772
+```{r}
+ mortgage%>% 
+  add_predictions(mod_3, type = 'response') %>% 
+  mutate(predict_accepted = pred >= 0.6) %>% 
+  filter(predict_accepted == FALSE, accepted == FALSE)
+```
+
+```{r}
+679/772
+
+```
+False Positive 
+
+fp/negtivie 
+
+type 1 error rate 
+
+
+FN 
+
+TYPE 2 ERROR rate 
+
+nTN = 679
+nFP = 49
+nFN = 93
+nTP = 179
+
+tpr = nTP /(nTP + nFN)|(predict-True/ all positive)
+tnr = nTN/(nTN + nFP)|(predict-False/ all False)
+fpr = nFP/(nTP + nFN)|(predict-True/)
+fnr = nFN/(nTN + nFP)
+
+
