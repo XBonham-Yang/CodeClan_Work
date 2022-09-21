@@ -1,0 +1,341 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(tidytext)
+library(janeaustenr)
+library(textdata)
+```
+
+```{r}
+phrases <- c(
+  "Here is some text.",
+  "Again, more text!",
+  "TEXT is Text?"
+)
+```
+
+```{r}
+example_text <- tibble(phrase = phrases,
+       id = 1:3)
+```
+## capital/puncucation 
+'unnest_tokens()'
+```{r}
+words_df <- example_text %>% 
+  unnest_tokens(word, phrase, to_lower = FALSE)
+
+words_df %>% count(word)
+```
+```{r}
+words_df %>% 
+  count(word,sort = TRUE)
+```
+
+```{r}
+lines <- 
+c(
+  "Whose woods these are I think I know.",
+  "His house is in the village though;", 
+  "He will not see me stopping here",
+  "To watch his woods fill up with snow."
+)
+```
+
+```{r}
+lines <- tibble(word = lines,
+                id = 1:4)
+
+lines %>% unnest_tokens(word_col, word) %>% 
+  group_by(word_col) %>% 
+  count() 
+```
+# stop words 
+```{r}
+library(janeaustenr)
+```
+
+```{r}
+class(prideprejudice)
+```
+```{r}
+pride_book <- tibble(
+  id = 1:length(prideprejudice),
+  text = prideprejudice
+) %>% unnest_tokens(word, text, token = 'words')
+```
+
+```{r}
+pride_book 
+```
+
+```{r}
+pride_book %>% count(word, sort = TRUE)
+```
+
+```{r}
+pride_book %>% 
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE)
+```
+
+```{r}
+stop_words %>% 
+  count(lexicon, sort = TRUE)
+
+stop_words %>% 
+  filter(lexicon == 'snowball')
+```
+
+```{r}
+pride_book %>% 
+  anti_join(filter(stop_words, lexicon == 'snowball')) %>% 
+  count(word, sort = TRUE)
+```
+```{r}
+ss_book <- tibble(
+  id = 1:length(sensesensibility),
+  text = sensesensibility
+) %>% unnest_tokens(word, text, token = 'words')
+```
+
+
+```{r}
+ss_book %>% 
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE)
+```
+# TF-IDF and n-grams 
+ - term frequency and inverse document frequency 
+ 
+```{r}
+sentences <- c(
+  "This is a sentence about cats.",
+  "This is a sentence about dogs.",
+  "This is a sentence about alligators."
+)
+```
+
+```{r}
+sentences_df <- tibble (sentence = sentences,
+                        id = 1:3) %>% 
+  unnest_tokens(word, sentence)
+
+sentences_df
+```
+
+```{r}
+count(sentences_df, word, id)
+```
+## tf - idf 
+
+```{r}
+sentences_df %>% 
+  count(word, id) %>% 
+  bind_tf_idf(term = word, document = id, n = n)
+```
+
+```{r}
+titles <- c("Pride and Prejudice", "Sense and Sensibility", "Emma", "Persuasion", "Mansfield Park", "Northanger Abbey")
+
+books <- list(prideprejudice, sensesensibility, emma, persuasion, mansfieldpark,  northangerabbey)
+```
+
+```{r}
+books[[1]] %>% head(20)
+```
+
+```{r}
+str(books)
+```
+
+```{r}
+books <- purrr::map_chr(books, paste, collapse = ' ' )
+```
+
+```{r}
+str(books)
+```
+
+```{r}
+all_book_df <- tibble(
+  title = titles,
+  text = books
+) %>% 
+  unnest_tokens(word, text)
+
+all_book_df
+```
+
+
+```{r}
+all_book_df_tf_idf <- all_book_df %>% 
+  count(word, title) %>% 
+  bind_tf_idf(word, title,n) %>% 
+  arrange(desc(tf_idf))
+
+all_book_df_tf_idf
+```
+```{r}
+all_book_df_tf_idf %>% 
+  group_by(title) %>% 
+  slice_max(tf_idf, n=5)
+```
+
+```{r}
+phrases <- c(
+  "here is some text",
+  "again more text",
+  "text is text"
+)
+
+phrases_df <- tibble(
+  phrase = phrases,
+  id     = 1:3) %>%  unnest_tokens(bigram, phrase, token = 'ngrams', n = 2)
+
+```
+```{r}
+book_df <- tibble(
+  id = 1:length(prideprejudice),
+  text = prideprejudice
+)
+```
+
+```{r}
+book_df %>% unnest_tokens(bigram, text, token = 'ngrams', n = 2) %>% 
+  group_by(bigram) %>% 
+  count() %>% 
+  arrange(desc(n))
+```
+
+
+```{r}
+book_df %>% unnest_tokens(trigram, text, token = 'ngrams', n = 3) %>% 
+  group_by(trigram) %>% 
+  count() %>% 
+  arrange(desc(n))
+```
+
+count(sentences, sort = TRUE)
+
+### separate()
+
+```{r}
+book_bigrams <- book_df %>% 
+  unnest_tokens(bigram, text, token = 'ngrams', n = 2) %>% 
+  count(bigram, sort = TRUE) %>% 
+  separate(bigram, c('word1','word2'), sep = ' ') %>% 
+  anti_join(stop_words, by = c('word1' = 'word')) %>% 
+  anti_join(stop_words, by = c('word2' = 'word'))
+book_bigrams
+```
+
+```{r}
+book_bigrams %>% 
+  unite(bigram, word1, word2, remove = FALSE, sep = ' ' )
+```
+
+```{r}
+book_2_bigrams  <- tibble(
+  id = 1:length(emma),
+  text = emma
+) %>%
+unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+count(bigram, sort = TRUE)
+
+book_2_bigrams %>%
+  separate(bigram, c("word_1", "word_2"), sep = " ", remove = FALSE) %>%
+  anti_join(stop_words, by = c("word_1" = "word")) %>%
+  anti_join(stop_words, by = c("word_2" = "word"))
+
+```
+
+sentiment analysis 
+```{r}
+get_sentiments('afinn')
+get_sentiments('bing')
+get_sentiments('loughran')
+get_sentiments('nrc') %>% 
+  count(sentiment)
+```
+```{r}
+book_sentiments <- pride_book %>%
+  anti_join(stop_words) %>% 
+  inner_join(get_sentiments("bing"))
+book_sentiments
+```
+```{r}
+bing <- get_sentiments('bing')
+```
+
+```{r}
+book_sentiments %>% count(sentiment)
+```
+
+```{r}
+book_sentiments %>% 
+  filter(sentiment == 'positive') %>% 
+  count(word, sort = TRUE)
+
+book_sentiments %>% 
+  filter(sentiment == 'negative') %>% 
+  count(word, sort = TRUE)
+```
+```{r}
+loughran <- get_sentiments('loughran')
+
+book_emma <- tibble(text = emma,
+                    id = 1: length(emma)) %>% 
+   unnest_tokens(word, text) %>%
+  anti_join(stop_words)
+```
+```{r}
+book_emma_sentiment <- book_emma %>%
+  left_join(loughran)
+```
+
+```{r}
+book_emma_sentiment %>% 
+  filter(sentiment == 'positive') %>% 
+  count(word, sort = TRUE)
+```
+
+```{r}
+book_emma_sentiment %>% 
+  filter(sentiment == 'negative') %>% 
+  count(word, sort = TRUE)
+```
+
+```{r}
+book_emma_sentiment %>%
+  filter(is.na(sentiment)) %>%
+  count(word, sort = TRUE)
+```
+
+## average sentiment per sentence 
+
+```{r}
+book_sentiments <- pride_book %>%
+  inner_join(get_sentiments("afinn"))
+
+book_sentiments
+```
+```{r}
+sentence_sentiments <- book_sentiments %>% 
+  group_by(id) %>% 
+  summarise(mean_sentiment = mean(value))
+
+```
+```{r}
+ggplot(sentence_sentiments) +
+  aes(id, mean_sentiment)+
+  geom_point(alpha = 0.1)+
+  geom_smooth()
+```
+
+
+
+
+
