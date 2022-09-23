@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Use k-means clustering to investigate potential relationships in the dataset students_big from the CodeClanData library.
+```{r}
+library(tidyverse)
+```
+
+```{r}
+student <- CodeClanData::students_big
+student_short <- student %>% select(starts_with("importance")) %>% 
+  mutate(across(.fns = scale))
+```
+
+1 Part a
+We’ve been asked to create clusters of students for the answers to the ‘importance’ questions (where students rate how important they find certain topics on a scale from 0 to 1000, the higher the number the more important they think the issue is).
+
+
+If we are to use the mathematical methods (elbow etc.) what would your optimal value of k been? Do you think the data seems well suited to cluster.
+```{r}
+library(broom)
+max_k <- 20
+k_clusters <- tibble(k = 1:max_k) %>% 
+  mutate(
+    kclust = map(k, ~ kmeans(student_short, .x, nstart = 25)),
+    glanced = map(kclust, glance)
+  ) %>% unnest(glanced)
+k_clusters
+
+
+
+k_clusters %>% 
+  ggplot(aes(x = k,
+             y = tot.withinss))+
+  geom_point()+
+  geom_line()+
+  scale_x_continuous(breaks = seq(1,20,1))
+```
+
+
+```{r}
+library(factoextra)
+fviz_nbclust(student_short,
+             kmeans,
+             method = "wss",
+             nstart = 25)
+```
+```{r}
+fviz_nbclust(student_short, 
+             kmeans, 
+             method = "silhouette", 
+             nstart = 25)
+```
+```{r}
+fviz_nbclust(student_short, 
+             kmeans, 
+             method = "gap_stat", 
+             nstart = 25, 
+             k.max = 10)
+```
+doesn't seem to be good ......
+
+
+
+
+2 Part b
+We have been asked to cluster the variables which are asking about environmental questions (importance_reducing_pollution, importance_recycling_rubbish, importance_conserving_water, importance_saving_enery) into 2 clusters because the school wants to split the students into 2 groups to target with specific learning/lessons about environmental issues.
+
+
+Once you have set up the 2 clusters visualise a combination of the variables split by the clusters (e.g. plot importance_reducing_pollution vs importance_recycling_rubbish etc.) how might you describe these 2 groups in terms of characteristics on views on environmental issues back to the school?
+
+```{r}
+environment_stu <- student_short %>% select(1:4)
+clustered_env <- environment_stu %>% 
+  kmeans(centers = 2,
+         nstart = 25)
+
+ clusterings %>% 
+  unnest(cols = c(augmented)) %>%
+  filter(k <= 6) %>%
+  ggplot(aes(x = home_school, y = state_school)) +
+  geom_point(aes(color = .cluster))+
+  facet_grid(.~k)
+```
+
