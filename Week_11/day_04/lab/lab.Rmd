@@ -71,15 +71,36 @@ We have been asked to cluster the variables which are asking about environmental
 Once you have set up the 2 clusters visualise a combination of the variables split by the clusters (e.g. plot importance_reducing_pollution vs importance_recycling_rubbish etc.) how might you describe these 2 groups in terms of characteristics on views on environmental issues back to the school?
 
 ```{r}
-environment_stu <- student_short %>% select(1:4)
+library(broom)
+```
+
+
+```{r}
+environment_data <- student %>% select(c(importance_reducing_pollution,importance_recycling_rubbish))
+
+environment_stu <- student_short %>% select(1:2)
+
 clustered_env <- environment_stu %>% 
   kmeans(centers = 2,
          nstart = 25)
 
+k_clusters <- tibble(k = 2) %>%
+  mutate(
+    kclust = map(k, ~ kmeans(environment_stu, .x, nstart = 25)), 
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, environment_data)
+  )
+
+
+
+clusterings <- k_clusters %>%
+  unnest(glanced)
+
  clusterings %>% 
   unnest(cols = c(augmented)) %>%
-  filter(k <= 6) %>%
-  ggplot(aes(x = home_school, y = state_school)) +
+  filter(k == 2) %>%
+  ggplot(aes(x = importance_reducing_pollution, y = importance_recycling_rubbish)) +
   geom_point(aes(color = .cluster))+
   facet_grid(.~k)
 ```
